@@ -1,15 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import React, { useEffect, useRef, useState } from "react";
-import {
-  motion,
-  MotionValue,
-  useMotionValue,
-  useMotionValueEvent,
-  useSpring,
-  useTransform,
-} from "framer-motion";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export type Milestone = {
   year: string;
@@ -18,380 +14,216 @@ export type Milestone = {
   image: string;
 };
 
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(Math.max(value, min), max);
-
-function Walker({ isWalking }: { isWalking: boolean }) {
-  const bob = isWalking ? { y: [0, -8, 0] } : { y: 0 };
-
-  return React.createElement(
-    motion.div,
-    {
-      className: "relative h-16 w-16",
-      animate: bob,
-      transition: { duration: 1, repeat: Infinity, ease: "easeInOut" },
-      "aria-hidden": true,
-    },
-    React.createElement("div", {
-      className:
-        "absolute left-1/2 top-0 h-5 w-5 -translate-x-1/2 rounded-full bg-[#14B8A6]",
-    }),
-    React.createElement("div", {
-      className:
-        "absolute left-1/2 top-5 h-6 w-3 -translate-x-1/2 rounded-full bg-[#14B8A6]",
-    }),
-    React.createElement(motion.div, {
-      className:
-        "absolute left-[18px] top-[28px] h-7 w-[3px] origin-top rounded-full bg-[#14B8A6]",
-      animate: isWalking ? { rotate: [16, -16, 16] } : { rotate: 0 },
-      transition: { duration: 0.9, repeat: Infinity, ease: "easeInOut" },
-    }),
-    React.createElement(motion.div, {
-      className:
-        "absolute right-[18px] top-[28px] h-7 w-[3px] origin-top rounded-full bg-[#14B8A6]",
-      animate: isWalking ? { rotate: [-16, 16, -16] } : { rotate: 0 },
-      transition: {
-        duration: 0.9,
-        repeat: Infinity,
-        ease: "easeInOut",
-        delay: 0.45,
-      },
-    }),
-    React.createElement(motion.div, {
-      className:
-        "absolute left-[14px] top-[18px] h-6 w-[3px] origin-top rounded-full bg-[#14B8A6]",
-      animate: isWalking ? { rotate: [-22, 10, -22] } : { rotate: 0 },
-      transition: {
-        duration: 0.9,
-        repeat: Infinity,
-        ease: "easeInOut",
-        delay: 0.45,
-      },
-    }),
-    React.createElement(motion.div, {
-      className:
-        "absolute right-[14px] top-[18px] h-6 w-[3px] origin-top rounded-full bg-[#14B8A6]",
-      animate: isWalking ? { rotate: [22, -10, 22] } : { rotate: 0 },
-      transition: { duration: 0.9, repeat: Infinity, ease: "easeInOut" },
-    }),
-  );
-}
-
-function TimelineDot({
-  milestone,
-  index,
-  progress,
-  totalSlides,
-}: {
-  milestone: Milestone;
-  index: number;
-  progress: MotionValue<number>;
-  totalSlides: number;
-}) {
-  const start = index / totalSlides;
-  const center = (index + 0.5) / totalSlides;
-  const end = (index + 1) / totalSlides;
-
-  const backgroundColor = useTransform(
-    progress,
-    [start, center, end],
-    ["rgba(255,255,255,0.3)", "rgba(20,184,166,1)", "rgba(255,255,255,0.3)"],
-  );
-
-  const scale = useTransform(progress, [start, center, end], [1, 1.45, 1]);
-
-  return React.createElement(motion.div, {
-    key: milestone.year,
-    className: "h-2 w-2 rounded-full",
-    style: { backgroundColor, scale },
-  });
-}
-
-function TimelineSlide({
-  milestone,
-  index,
-  progress,
-  totalSlides,
-}: {
-  milestone: Milestone;
-  index: number;
-  progress: MotionValue<number>;
-  totalSlides: number;
-}) {
-  const start = index / totalSlides;
-  const center = (index + 0.5) / totalSlides;
-  const end = (index + 1) / totalSlides;
-
-  const opacity = useTransform(
-    progress,
-    [start, center - 0.08, center, center + 0.08, end],
-    [0.28, 0.72, 1, 0.72, 0.28],
-  );
-  const scale = useTransform(
-    progress,
-    [start, center - 0.1, center, center + 0.1, end],
-    [0.9, 0.965, 1, 0.965, 0.9],
-  );
-  const textY = useTransform(progress, [start, center, end], [80, 0, -50]);
-  const imageScale = useTransform(
-    progress,
-    [start, center, end],
-    [1.12, 1, 1.05],
-  );
-  const blur = useTransform(
-    progress,
-    [start, center - 0.08, center, center + 0.08, end],
-    [10, 4, 0, 4, 10],
-  );
-  const filter = useTransform(blur, (value) => `blur(${value}px)`);
-
-  return React.createElement(
-    motion.div,
-    {
-      className:
-        "relative flex h-screen w-screen flex-shrink-0 items-center justify-center overflow-hidden",
-      style: { opacity, scale, filter },
-    },
-    React.createElement(
-      motion.div,
-      { className: "absolute inset-0", style: { scale: imageScale } },
-      React.createElement(Image, {
-        src: milestone.image,
-        alt: milestone.title,
-        fill: true,
-        className: "object-cover",
-        priority: index === 0,
-      }),
-    ),
-    React.createElement("div", {
-      className:
-        "absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80",
-    }),
-    React.createElement(
-      motion.div,
-      {
-        className:
-          "relative z-10 mx-auto max-w-5xl px-8 text-center text-white",
-        style: { y: textY },
-      },
-      React.createElement(
-        "div",
-        {
-          className:
-            "mb-4 text-[5rem] font-black leading-none text-white/15 md:text-[9rem]",
-        },
-        milestone.year,
-      ),
-      React.createElement(
-        "h2",
-        {
-          className: "mb-6 text-4xl font-bold drop-shadow-2xl md:text-7xl",
-        },
-        milestone.title,
-      ),
-      React.createElement(
-        "p",
-        {
-          className:
-            "mx-auto max-w-3xl text-lg leading-relaxed text-white/90 md:text-2xl",
-        },
-        milestone.description,
-      ),
-    ),
-  );
-}
-
 export function TimelineScroller({ milestones }: { milestones: Milestone[] }) {
-  const sectionRef = useRef<HTMLElement>(null);
-  const progress = useMotionValue(0);
-  const totalSlides = milestones.length;
-  const maxIndex = Math.max(totalSlides - 1, 0);
-
-  const [activeSlide, setActiveSlide] = useState(0);
-  const [isLocked, setIsLocked] = useState(false);
-
-  const smoothProgress = useSpring(progress, {
-    stiffness: 70,
-    damping: 24,
-    mass: 1.05,
-    restDelta: 0.0005,
-  });
-
-  const normalizedProgress = useTransform(smoothProgress, (value) =>
-    maxIndex === 0 ? 0 : value / maxIndex,
-  );
-
-  const trackX = useTransform(
-    normalizedProgress,
-    [0, 1],
-    ["0%", `-${maxIndex * 100}%`],
-  );
-  const walkerX = useTransform(normalizedProgress, [0, 1], ["8%", "92%"]);
-  const walkerY = useTransform(
-    normalizedProgress,
-    [0, 0.18, 0.36, 0.54, 0.72, 0.9, 1],
-    [0, -10, 0, -10, 0, -8, 0],
-  );
-  const walkerRotate = useTransform(
-    normalizedProgress,
-    [0, 0.2, 0.5, 0.8, 1],
-    [0, 1.5, 0, -1.5, 0],
-  );
-  const progressWidth = useTransform(
-    normalizedProgress,
-    (value) => `${value * 100}%`,
-  );
-  const shadowScale = useTransform(walkerY, [-10, 0], [0.84, 1]);
-  const shadowOpacity = useTransform(walkerY, [-10, 0], [0.28, 0.6]);
-
-  useMotionValueEvent(smoothProgress, "change", (latest) => {
-    const current = clamp(latest, 0, maxIndex);
-    setActiveSlide(Math.round(current));
-  });
-
+  const containerRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const section = sectionRef.current;
-    if (!section || maxIndex === 0) return;
+    const container = containerRef.current;
+    const track = trackRef.current;
 
-    const setScrollLock = (locked: boolean) => {
-      document.body.style.overflow = locked ? "hidden" : "";
-      document.documentElement.style.overflow = locked ? "hidden" : "";
-      setIsLocked(locked);
-    };
+    if (!container || !track || milestones.length === 0) {
+      return;
+    }
 
-    const handleWheel = (event: WheelEvent) => {
-      const rect = section.getBoundingClientRect();
-      const isSectionActive =
-        rect.top <= 0 && rect.bottom >= window.innerHeight;
+    const ctx = gsap.context(() => {
+      const getTravel = () =>
+        Math.max(track.scrollWidth - window.innerWidth, 0);
 
-      if (!isSectionActive) {
-        if (isLocked) setScrollLock(false);
-        return;
-      }
+      const getDistance = () => Math.max(track.scrollWidth, window.innerWidth);
 
-      const delta = event.deltaY;
-      const current = progress.get();
-      const next = clamp(current + delta * 0.0011, 0, maxIndex);
-      const willMove = Math.abs(next - current) > 0.0005;
-
-      if (!willMove) {
-        if ((current <= 0 && delta < 0) || (current >= maxIndex && delta > 0)) {
-          setScrollLock(false);
-          return;
-        }
-      }
-
-      event.preventDefault();
-      if (!isLocked) setScrollLock(true);
-      progress.set(next);
-
-      if ((next <= 0 && delta < 0) || (next >= maxIndex && delta > 0)) {
-        window.setTimeout(() => setScrollLock(false), 120);
-      }
-    };
-
-    window.addEventListener("wheel", handleWheel, { passive: false });
-
-    return () => {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-      window.removeEventListener("wheel", handleWheel);
-    };
-  }, [isLocked, maxIndex, progress]);
-
-  const isWalking = isLocked || activeSlide > 0;
-
-  return React.createElement(
-    "section",
-    {
-      ref: sectionRef,
-      className: "relative overscroll-none",
-      style: { height: `${Math.max(totalSlides * 135, 320)}vh` },
-    },
-    React.createElement(
-      "div",
-      {
-        className:
-          "sticky top-0 h-screen overflow-hidden rounded-[2rem] bg-black",
-      },
-      React.createElement(
-        "div",
-        {
-          className:
-            "absolute left-1/2 top-8 z-50 flex -translate-x-1/2 items-center gap-4 rounded-full border border-white/10 bg-black/35 px-4 py-2 backdrop-blur-md",
+      gsap.to(track, {
+        x: () => -getTravel(),
+        ease: "none",
+        scrollTrigger: {
+          trigger: container,
+          start: "top top",
+          end: () => `+=${getDistance()}`,
+          scrub: 1,
+          pin: true,
+          invalidateOnRefresh: true,
         },
-        React.createElement(
-          "span",
-          { className: "text-sm font-medium text-white/70" },
-          "Scroll to Explore",
-        ),
-        React.createElement(
-          "div",
-          { className: "h-1 w-32 overflow-hidden rounded-full bg-white/20" },
-          React.createElement(motion.div, {
-            className: "h-full bg-[#14B8A6]",
-            style: { width: progressWidth },
-          }),
-        ),
-      ),
-      React.createElement(
-        motion.div,
-        {
-          className: "absolute bottom-16 left-0 z-50",
-          style: { x: walkerX, y: walkerY, rotate: walkerRotate },
-        },
-        React.createElement(Walker, { isWalking }),
-        React.createElement(motion.div, {
-          className: "mx-auto mt-1 h-3 w-12 rounded-full bg-black/30 blur-sm",
-          style: { scale: shadowScale, opacity: shadowOpacity },
-        }),
-      ),
-      React.createElement(
-        "div",
-        {
-          className: "absolute bottom-8 left-1/2 z-40 -translate-x-1/2",
-        },
-        React.createElement(
-          "div",
-          {
-            className:
-              "flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-4 py-2 backdrop-blur-md",
-          },
-          ...milestones.map((milestone, index) =>
-            React.createElement(TimelineDot, {
-              key: milestone.year,
-              milestone,
-              index,
-              progress: normalizedProgress,
-              totalSlides,
-            }),
-          ),
-        ),
-      ),
-      React.createElement(
-        motion.div,
-        {
-          className: "flex h-full",
-          style: { x: trackX },
-        },
-        ...milestones.map((milestone, index) =>
-          React.createElement(TimelineSlide, {
-            key: milestone.year,
-            milestone,
-            index,
-            progress: normalizedProgress,
-            totalSlides,
-          }),
-        ),
-      ),
-      React.createElement("div", {
-        className:
-          "pointer-events-none absolute inset-y-0 left-0 z-20 w-32 bg-gradient-to-r from-black/60 to-transparent",
-      }),
-      React.createElement("div", {
-        className:
-          "pointer-events-none absolute inset-y-0 right-0 z-20 w-32 bg-gradient-to-l from-black/60 to-transparent",
-      }),
-    ),
+      });
+    }, container);
+
+    return () => ctx.revert();
+  }, [milestones]);
+
+  return (
+    <section
+      ref={containerRef}
+      className="relative h-[100svh] overflow-hidden bg-[linear-gradient(180deg,#effdfa_0%,#f8fffe_38%,#ffffff_100%)] text-slate-900"
+    >
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-0 top-0 h-full w-full bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.18),transparent_32%),radial-gradient(circle_at_top_right,rgba(14,165,233,0.12),transparent_28%)]" />
+        <div className="absolute bottom-24 left-0 h-px w-full bg-primary/20" />
+
+        {[10, 23, 38, 54, 71, 87].map((left, index) => (
+          <div
+            key={left}
+            className="absolute bottom-24 w-px bg-primary/20"
+            style={{
+              left: `${left}%`,
+              height: index % 2 === 0 ? "140px" : "112px",
+            }}
+          >
+            <div className="absolute -top-4 left-1/2 h-4 w-4 -translate-x-1/2 rounded-full border border-primary/30 bg-white shadow-[0_0_0_6px_rgba(255,255,255,0.65)]" />
+          </div>
+        ))}
+
+        <svg
+          className="absolute bottom-[92px] left-[7%] h-24 w-16 text-primary/20"
+          viewBox="0 0 80 160"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M40 10C26 10 16 20 16 34V116"
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          <path
+            d="M40 10C54 10 64 20 64 34V116"
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          <path
+            d="M16 116H64"
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          <circle cx="40" cy="34" r="10" fill="currentColor" />
+        </svg>
+
+        <svg
+          className="absolute bottom-[92px] left-[49%] h-28 w-20 text-cyan-400/20"
+          viewBox="0 0 100 190"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M50 18C35 18 24 29 24 45V150"
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          <path
+            d="M50 18C65 18 76 29 76 45V150"
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          <path
+            d="M24 150H76"
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          <circle cx="50" cy="45" r="11" fill="currentColor" />
+        </svg>
+
+        <svg
+          className="absolute bottom-0 left-0 h-28 w-full text-primary/10"
+          viewBox="0 0 1440 200"
+          preserveAspectRatio="none"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M0 150C120 128 240 174 360 156C480 138 600 92 720 108C840 124 960 174 1080 166C1200 158 1320 118 1440 134V200H0V150Z"
+            fill="currentColor"
+          />
+        </svg>
+      </div>
+
+      {/* <div
+        ref={walkerRef}
+        className="pointer-events-none absolute left-[8%] top-1/2 z-30 hidden -translate-x-1/2 -translate-y-[58%] md:block"
+      >
+        Walking person temporarily disabled as requested.
+      </div> */}
+
+      <div className="relative z-10 flex h-full flex-col justify-between px-6 py-10 md:px-10 lg:px-16">
+        <div className="flex items-center justify-between gap-6">
+          <div>
+            <p className="inline-flex rounded-full border border-primary/15 bg-primary/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-primary-dark">
+              Milestones
+            </p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 md:text-5xl">
+              The journey, year by year
+            </h2>
+          </div>
+
+          <div className="hidden text-right md:block">
+            <p className="text-xs uppercase tracking-[0.35em] text-primary-dark/80">
+              Scroll horizontally
+            </p>
+            <p className="mt-2 max-w-xs text-sm leading-6 text-slate-600">
+              Timeline styling now includes reference-inspired SVG landmarks, a
+              moving balloon, and your site’s teal/cyan brand palette.
+            </p>
+          </div>
+        </div>
+
+        {/* <div className="pointer-events-none absolute left-6 right-6 top-1/2 z-20 hidden -translate-y-1/2 md:block md:left-10 md:right-10 lg:left-16 lg:right-16">
+          Moving progress line temporarily disabled as requested.
+        </div> */}
+
+        <div
+          ref={trackRef}
+          className="relative z-10 flex h-full items-center gap-10 pl-2 pr-[18vw] md:gap-14 md:pl-6"
+        >
+          {milestones.map((item) => {
+            return (
+              <article
+                key={item.year}
+                className="relative flex h-full w-[82vw] min-w-[82vw] shrink-0 items-center md:w-[520px] md:min-w-[520px]"
+              >
+                <div className="absolute left-0 top-1/2 hidden h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-[5px] border-white bg-primary shadow-[0_0_0_1px_rgba(20,184,166,0.25)] md:block" />
+
+                <div className="absolute left-[2px] top-1/2 hidden h-32 w-px bg-primary/20 md:block" />
+
+                <div className="relative w-full max-w-[390px] md:translate-y-24 lg:translate-y-28">
+                  <div className="absolute -top-24 left-0 z-20 text-[72px] font-bold leading-none tracking-[-0.06em] text-primary/15 md:-top-32 md:text-[110px]">
+                    {item.year}
+                  </div>
+
+                  <div className="relative z-10 rounded-[24px] border border-white/70 bg-white/90 p-3 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-sm md:mt-14">
+                    <div className="flex items-center gap-3">
+                      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-[18px] bg-slate-100 md:h-28 md:w-28">
+                        <Image
+                          src={item.image}
+                          alt={item.title}
+                          fill
+                          sizes="112px"
+                          className="object-cover"
+                        />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-lg font-semibold tracking-tight text-slate-900 md:text-xl">
+                          {item.title}
+                        </h3>
+                        <p className="mt-2 text-xs leading-6 text-slate-600 md:text-sm">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+
+        <div className="relative z-20 flex items-center justify-between gap-4 text-xs uppercase tracking-[0.35em] text-primary-dark md:hidden">
+          <span>{milestones[0]?.year}</span>
+          <span>Timeline</span>
+          <span>{milestones[milestones.length - 1]?.year}</span>
+        </div>
+      </div>
+    </section>
   );
 }

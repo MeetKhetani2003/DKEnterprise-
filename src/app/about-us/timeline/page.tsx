@@ -22,18 +22,18 @@ export default function TimelinePage() {
         image="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1600&q=80"
       />
 
-      <section className="section-padding">
-        <div className="container-shell">
-          <Reveal>
+      <section className="relative w-full overflow-hidden bg-[#f5f5f5] py-20">
+        <Reveal>
+          <div className="text-center max-w-3xl mx-auto px-6">
             <SectionHeading
               kicker="2019-2024"
               title="Progress you can trace through operational milestones."
-              description="Scroll through the timeline to see how DK Enterprise has sharpened its capabilities, delivery systems, and client impact."
+              description="Scroll through the timeline to see how DK Enterprise has sharpened its capabilities."
             />
-          </Reveal>
-          <div className="mt-12">
-            <TimelineScroller milestones={timelineMilestones} />
           </div>
+        </Reveal>
+        <div className="mt-12">
+          <TimelineScroller milestones={timelineMilestones} />
         </div>
       </section>
     </PageTransition>
