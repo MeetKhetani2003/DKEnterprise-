@@ -1,26 +1,26 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import type { Metadata } from "next";
+import Image from "next/image";
+import { notFound } from "next/navigation";
+import { CheckCircle2, Settings, Sparkles } from "lucide-react";
 
-import { AlternatingSection } from '@/components/AlternatingSection';
-import { FeatureGrid } from '@/components/FeatureGrid';
-import { PageHero } from '@/components/PageHero';
-import { PageTransition } from '@/components/PageTransition';
-import { Reveal } from '@/components/Reveal';
-import { SectionHeading } from '@/components/SectionHeading';
-import { getSectorBySlug } from '@/lib/content';
-import { sectors } from '@/lib/sectors-data';
+import { PageTransition } from "@/components/PageTransition";
+import { Reveal } from "@/components/Reveal";
+import { getSectorBySlug } from "@/lib/content";
+import { sectors } from "@/lib/sectors-data";
+import { PageHero } from "@/components/PageHero";
 
 export function generateStaticParams() {
   return sectors.map((sector) => ({ slug: sector.slug }));
 }
 
-export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
+export function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Metadata {
   const sector = getSectorBySlug(params.slug);
 
-  if (!sector) {
-    return { title: 'Sector Not Found' };
-  }
+  if (!sector) return { title: "Sector Not Found" };
 
   return {
     title: sector.title,
@@ -31,80 +31,103 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
 export default function SectorPage({ params }: { params: { slug: string } }) {
   const sector = getSectorBySlug(params.slug);
 
-  if (!sector) {
-    notFound();
-  }
+  if (!sector) notFound();
 
   return (
     <PageTransition>
-      <PageHero kicker={sector.kicker} title={sector.title} description={sector.heroDescription} image={sector.image} />
+      {/* ✅ HERO */}
+      <PageHero title={sector.title} image={sector.image} />
 
+      {/* ✅ HEADING + DETAILS */}
       <section className="section-padding">
-        <div className="container-shell">
+        <div className="container-shell text-center max-w-3xl mx-auto">
           <Reveal>
-            <SectionHeading
-              kicker="About the Sector"
-              title={`Facility management tailored for ${sector.title.toLowerCase()} environments.`}
-              description={sector.description}
-              align="center"
-            />
+            <span className="text-xs uppercase tracking-[0.2em] text-primary">
+              {sector.kicker || "Sector Overview"}
+            </span>
+
+            <h1 className="mt-3 text-3xl sm:text-4xl md:text-5xl font-semibold text-slate-900 leading-tight">
+              {sector.title}
+            </h1>
+
+            <p className="mt-5 text-slate-600 leading-7 text-base sm:text-lg">
+              {sector.description}
+            </p>
           </Reveal>
         </div>
       </section>
 
-      <section className="section-padding pt-0">
-        <div className="container-shell space-y-16">
-          {sector.features.map((feature, index) => (
-            <AlternatingSection
-              key={feature.title}
-              title={feature.title}
-              description={feature.description}
-              image={feature.image}
-              bullets={feature.bullets}
-              reverse={index % 2 === 1}
-            />
-          ))}
-        </div>
-      </section>
+      {/* ✅ PHOTOS */}
+      {sector.images && (
+        <section className="section-padding pt-0">
+          <div className="container-shell">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {sector.images.map((img, index) => (
+                <div
+                  key={index}
+                  className="group relative h-[240px] overflow-hidden rounded-[1.5rem]"
+                >
+                  <Image
+                    src={img}
+                    alt="sector"
+                    fill
+                    className="object-cover transition duration-500 group-hover:scale-110"
+                  />
 
+                  {/* subtle overlay */}
+                  <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ✅ ADVANTAGES */}
       <section className="section-padding">
         <div className="container-shell">
-          <Reveal>
-            <SectionHeading
-              kicker="Client Advantages"
-              title={`Why ${sector.title} leaders choose DK Enterprise.`}
-              description="Our sector playbooks combine operational control, trained teams, and reporting clarity for high-trust environments."
-            />
-          </Reveal>
-          <div className="mt-10">
-            <FeatureGrid items={sector.advantages} columns={3} />
+          <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-6 sm:p-8">
+            {/* Heading */}
+            <div className="flex items-center gap-3">
+              <Sparkles className="text-primary h-6 w-6" />
+              <h2 className="text-xl sm:text-2xl font-semibold text-slate-900">
+                Advantages
+              </h2>
+            </div>
+
+            {/* List */}
+            <ol className="mt-6 space-y-4 text-slate-700 leading-7">
+              {sector.advantages.map((item, index) => (
+                <li key={index}>
+                  {index + 1}. {item}
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
       </section>
 
+      {/* ✅ KEY FEATURES */}
       <section className="section-padding pt-0">
         <div className="container-shell">
-          <Reveal>
-            <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-soft sm:p-10 lg:flex lg:items-center lg:justify-between">
-              <div className="max-w-2xl">
-                <span className="section-kicker">Need a Tailored Approach?</span>
-                <h2 className="text-3xl font-semibold tracking-tight text-slate-900">
-                  Let&apos;s shape a sector-ready operating model for your facilities.
-                </h2>
-                <p className="mt-4 text-slate-600">
-                  Speak with our team about scope planning, mobilisation, compliance alignment, and service outcomes for your site portfolio.
-                </p>
-              </div>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row lg:mt-0">
-                <Link href="/contact-us" className="button-primary">
-                  Speak to Our Team
-                </Link>
-                <Link href="/services/integrated-facility-management" className="button-secondary">
-                  Explore Services
-                </Link>
-              </div>
+          <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-6 sm:p-8">
+            {/* Heading */}
+            <div className="flex items-center gap-3">
+              <Settings className="text-primary h-6 w-6" />
+              <h2 className="text-xl sm:text-2xl font-semibold text-slate-900">
+                Key Features
+              </h2>
             </div>
-          </Reveal>
+
+            {/* List */}
+            <ol className="mt-6 space-y-4 text-slate-700 leading-7">
+              {sector.features.map((feature, index) => (
+                <li key={feature.title}>
+                  {index + 1}. {feature.title}
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
       </section>
     </PageTransition>

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function ContactStrap() {
   return (
-    <section className="section-padding bg-slate-100">
+    <section className="section-padding bg-slate-100 p-4 my-8">
       <div className="container-shell text-center">
         {/* Title */}
         <h2 className="text-3xl sm:text-4xl font-semibold text-slate-900">
