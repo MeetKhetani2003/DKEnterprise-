@@ -66,13 +66,13 @@ export function Navbar() {
         "fixed inset-x-0 top-0 z-50 flex justify-center transition-colors duration-500",
         scrolled
           ? "bg-white/90 shadow-sm backdrop-blur-md border-b border-slate-200"
-          : "bg-white/50 backdrop-blur-sm border-b border-white/20"
+          : "bg-white/50 backdrop-blur-sm border-b border-white/20",
       )}
       animate={{ y: visible ? 0 : -100 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
     >
       <div className="container-shell w-full">
-        <nav className="relative flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
+        <nav className="relative flex items-center justify-between gap-4 px-4 py-2 sm:px-6">
           {/* Brand Logo */}
           <Link href="/" className="group relative block">
             <Image

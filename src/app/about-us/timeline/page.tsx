@@ -1,15 +1,15 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
-import { PageHero } from '@/components/PageHero';
-import { PageTransition } from '@/components/PageTransition';
-import { Reveal } from '@/components/Reveal';
-import { SectionHeading } from '@/components/SectionHeading';
-import { TimelineScroller } from '@/components/TimelineScroller';
-import { timelineMilestones } from '@/lib/about-data';
+import { PageHero } from "@/components/PageHero";
+import { PageTransition } from "@/components/PageTransition";
+import { Reveal } from "@/components/Reveal";
+import { SectionHeading } from "@/components/SectionHeading";
+import { TimelineScroller } from "@/components/TimelineScroller";
+import { timelineMilestones } from "@/lib/about-data";
 
 export const metadata: Metadata = {
-  title: 'Timeline',
-  description: 'Explore the DK Enterprise journey from 2019 to 2024.',
+  title: "Timeline",
+  description: "Explore the DK Enterprise journey from 2019 to 2024.",
 };
 
 export default function TimelinePage() {
