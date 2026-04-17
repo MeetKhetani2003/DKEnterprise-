@@ -56,22 +56,6 @@ export function TabbedShowcase() {
             ),
           )}
         </div>
-
-        <Reveal>
-          <div className="mt-8 flex justify-end">
-            <Link
-              href={
-                activeTab === "services"
-                  ? "/services/integrated-facility-management"
-                  : "/sectors/government"
-              }
-              className="inline-flex items-center gap-2 text-sm font-semibold text-primary-dark"
-            >
-              Explore all {activeTab}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </Reveal>
       </div>
     </section>
   );

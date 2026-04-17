@@ -25,8 +25,8 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
   const activeSlide = slides[activeIndex];
 
   return (
-    <section className="relative isolate px-10 ">
-      <div className="relative overflow-hidden ">
+    <section className="relative isolate px-10 py-6 rounded-xl ">
+      <div className="relative overflow-hidden rounded-md ">
         {/* Background Image */}
         <AnimatePresence mode="wait">
           <motion.div

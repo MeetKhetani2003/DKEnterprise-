@@ -40,12 +40,8 @@ export default function SectorPage({ params }: { params: { slug: string } }) {
 
       {/* ✅ HEADING + DETAILS */}
       <section className="section-padding">
-        <div className="container-shell text-center max-w-3xl mx-auto">
+        <div className="container-shell text-center max-w-3xl ">
           <Reveal>
-            <span className="text-xs uppercase tracking-[0.2em] text-primary">
-              {sector.kicker || "Sector Overview"}
-            </span>
-
             <h1 className="mt-3 text-3xl sm:text-4xl md:text-5xl font-semibold text-slate-900 leading-tight">
               {sector.title}
             </h1>

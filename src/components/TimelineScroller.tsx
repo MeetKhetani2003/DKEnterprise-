@@ -155,16 +155,6 @@ export function TimelineScroller({ milestones }: { milestones: Milestone[] }) {
               The journey, year by year
             </h2>
           </div>
-
-          <div className="hidden text-right md:block">
-            <p className="text-xs uppercase tracking-[0.35em] text-primary-dark/80">
-              Scroll horizontally
-            </p>
-            <p className="mt-2 max-w-xs text-sm leading-6 text-slate-600">
-              Timeline styling now includes reference-inspired SVG landmarks, a
-              moving balloon, and your site’s teal/cyan brand palette.
-            </p>
-          </div>
         </div>
 
         {/* <div className="pointer-events-none absolute left-6 right-6 top-1/2 z-20 hidden -translate-y-1/2 md:block md:left-10 md:right-10 lg:left-16 lg:right-16">
