@@ -6,6 +6,7 @@ import { PageTransition } from '@/components/PageTransition';
 import { Reveal } from '@/components/Reveal';
 import { SectionHeading } from '@/components/SectionHeading';
 import { groupCompanies } from '@/lib/about-data';
+import { ContactStrap } from '@/components/ContactStrap';
 
 export const metadata: Metadata = {
   title: 'Group of Companies',
@@ -49,6 +50,7 @@ export default function GroupOfCompaniesPage() {
           </div>
         </div>
       </section>
+       <ContactStrap />
     </PageTransition>
   );
 }

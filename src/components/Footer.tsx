@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowRight, Mail, MapPin, Phone } from 'lucide-react';
 
 import { navigation } from '@/lib/navigation';
+import Image from 'next/image';
 
 const quickLinks = ['/careers', '/contact-us', '/about-us/clientele', '/about-us/group-of-companies'];
 const quickLinkLabels: Record<string, string> = {
@@ -18,9 +19,15 @@ export function Footer() {
         <div className="grid gap-10 lg:grid-cols-[1.2fr,0.7fr,0.7fr,0.7fr,1fr]">
           <div>
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-lg font-bold text-primary-light">DK</div>
+              {/* <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-lg font-bold text-primary-light">DK</div> */}
               <div>
-                <p className="text-lg font-semibold">DK Enterprise</p>
+                <Image
+                 src={'/logos/logo.png'}
+                 alt='logo2'
+                 width={100}
+                 height={100}
+                 className='rounded-full'
+                />
                 <p className="text-sm text-white/60">Facility Management Company</p>
               </div>
             </div>

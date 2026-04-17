@@ -9,6 +9,7 @@ import { SectionHeading } from "@/components/SectionHeading";
 import { StatsSection } from "@/components/StatsSection";
 import { services } from "@/lib/services-data";
 import { getServiceBySlug } from "@/lib/content";
+import { ContactStrap } from "@/components/ContactStrap";
 
 export function generateStaticParams() {
   return services.map((service) => ({ slug: service.slug }));
@@ -61,6 +62,7 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
           ))}
         </div>
       </section>
+       <ContactStrap />
     </PageTransition>
   );
 }

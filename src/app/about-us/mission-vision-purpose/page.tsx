@@ -4,6 +4,7 @@ import { AlternatingSection } from '@/components/AlternatingSection';
 import { PageHero } from '@/components/PageHero';
 import { PageTransition } from '@/components/PageTransition';
 import { missionVisionPurpose } from '@/lib/about-data';
+import { ContactStrap } from '@/components/ContactStrap';
 
 export const metadata: Metadata = {
   title: 'Mission, Vision & Purpose',
@@ -46,6 +47,7 @@ export default function MissionVisionPurposePage() {
           ))}
         </div>
       </section>
+       <ContactStrap />
     </PageTransition>
   );
 }

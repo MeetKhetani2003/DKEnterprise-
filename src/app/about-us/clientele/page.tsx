@@ -6,6 +6,7 @@ import { Reveal } from '@/components/Reveal';
 import { SectionHeading } from '@/components/SectionHeading';
 import { TestimonialCarousel } from '@/components/TestimonialCarousel';
 import { clientStats, clienteleLogos, testimonials } from '@/lib/about-data';
+import { ContactStrap } from '@/components/ContactStrap';
 
 export const metadata: Metadata = {
   title: 'Clientele',
@@ -61,6 +62,7 @@ export default function ClientelePage() {
           </Reveal>
         </div>
       </section>
+       <ContactStrap />
     </PageTransition>
   );
 }

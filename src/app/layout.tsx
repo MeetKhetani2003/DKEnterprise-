@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 
 import "./globals.css";
 
-import { ContactStrap } from "@/components/ContactStrap";
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import { getAbsoluteUrl } from "@/lib/utils";
@@ -47,7 +46,7 @@ export default function RootLayout({
         <Navbar />
         <main className="overflow-hidden pt-16">{children}</main>
         <Saperator />
-        <ContactStrap />
+       
 
         <Footer />
       </body>

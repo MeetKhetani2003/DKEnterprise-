@@ -8,6 +8,7 @@ import { PageTransition } from '@/components/PageTransition';
 import { Reveal } from '@/components/Reveal';
 import { SectionHeading } from '@/components/SectionHeading';
 import { boardMembers } from '@/lib/about-data';
+import { ContactStrap } from '@/components/ContactStrap';
 
 export const metadata: Metadata = {
   title: 'Our Chairman',
@@ -63,6 +64,7 @@ export default function OurChairmanPage() {
           </div>
         </div>
       </section>
+       <ContactStrap />
     </PageTransition>
   );
 }

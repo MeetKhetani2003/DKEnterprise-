@@ -17,6 +17,7 @@ import {
 import { getAbsoluteUrl } from "@/lib/utils";
 import { SectorCarousel } from "@/components/SectorCarousel";
 import Saperator from "@/components/Saperator";
+import { ContactStrap } from "@/components/ContactStrap";
 const sectorsData = [
   {
     tag: "Sustainability",
@@ -80,6 +81,7 @@ export default function HomePage() {
           <SectorCarousel sectors={sectorsData} />
         </div>
       </section>
+       <ContactStrap />
     </PageTransition>
   );
 }

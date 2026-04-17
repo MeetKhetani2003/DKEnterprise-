@@ -8,6 +8,7 @@ import { Reveal } from "@/components/Reveal";
 import { getSectorBySlug } from "@/lib/content";
 import { sectors } from "@/lib/sectors-data";
 import { PageHero } from "@/components/PageHero";
+import { ContactStrap } from "@/components/ContactStrap";
 
 export function generateStaticParams() {
   return sectors.map((sector) => ({ slug: sector.slug }));
@@ -128,6 +129,7 @@ export default function SectorPage({ params }: { params: { slug: string } }) {
           </div>
         </div>
       </section>
+       <ContactStrap />
     </PageTransition>
   );
 }

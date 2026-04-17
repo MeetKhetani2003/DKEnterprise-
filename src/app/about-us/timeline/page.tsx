@@ -6,6 +6,7 @@ import { Reveal } from "@/components/Reveal";
 import { SectionHeading } from "@/components/SectionHeading";
 import { TimelineScroller } from "@/components/TimelineScroller";
 import { timelineMilestones } from "@/lib/about-data";
+import { ContactStrap } from "@/components/ContactStrap";
 
 export const metadata: Metadata = {
   title: "Timeline",
@@ -36,6 +37,7 @@ export default function TimelinePage() {
           <TimelineScroller milestones={timelineMilestones} />
         </div>
       </section>
+       <ContactStrap />
     </PageTransition>
   );
 }
