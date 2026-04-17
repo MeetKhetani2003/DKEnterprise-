@@ -58,5 +58,4 @@ export const navigation: NavItem[] = [
     ],
   },
   { label: 'Careers', href: '/careers' },
-  { label: 'Contact Us', href: '/contact-us' },
 ];

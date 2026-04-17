@@ -229,7 +229,7 @@ function MobileMenu({
         className="fixed inset-y-0 right-0 z-[70] flex w-full max-w-sm flex-col bg-white shadow-2xl lg:hidden"
       >
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
-          <span className="text-lg font-bold text-slate-900">Menu</span>
+          <span className="text-lg font-bold text-slate-900">DK ENTERPRISE</span>
           <button onClick={onClose} className="rounded-full bg-slate-100 p-2 transition hover:bg-slate-200">
             <X className="h-5 w-5 text-slate-600" />
           </button>
