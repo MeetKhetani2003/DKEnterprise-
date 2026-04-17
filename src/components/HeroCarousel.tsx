@@ -25,8 +25,8 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
   const activeSlide = slides[activeIndex];
 
   return (
-    <section className="relative isolate px-10 py-6 rounded-xl ">
-      <div className="relative overflow-hidden rounded-md ">
+    <section className="relative isolate px-4 sm:px-10 py-4 sm:py-6 rounded-xl">
+      <div className="relative overflow-hidden rounded-[2rem]">
         {/* Background Image */}
         <AnimatePresence mode="wait">
           <motion.div
@@ -51,7 +51,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
         </AnimatePresence>
 
         {/* Content */}
-        <div className="relative flex min-h-[520px] items-center justify-center text-center px-6">
+        <div className="relative flex min-h-[400px] sm:min-h-[520px] items-center justify-center text-center px-4 sm:px-6">
           <motion.div
             key={`${activeSlide.title}-content`}
             initial={{ opacity: 0, y: 30 }}
@@ -60,7 +60,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
             className="max-w-3xl text-white"
           >
             {/* Heading */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold leading-tight drop-shadow-md">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-semibold leading-tight drop-shadow-md">
               {activeSlide.title}
             </h1>
 

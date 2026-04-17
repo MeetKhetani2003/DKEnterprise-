@@ -61,12 +61,13 @@ export function Navbar() {
   }, [mobileOpen]);
 
   return (
-    <motion.header
+    <>
+      <motion.header
       className={cn(
         "fixed inset-x-0 top-0 z-50 flex justify-center transition-colors duration-500",
         scrolled
-          ? "bg-white/90 shadow-sm backdrop-blur-md border-b border-slate-200"
-          : "bg-white/50 backdrop-blur-sm border-b border-white/20",
+          ? "bg-white/95 shadow-md backdrop-blur-lg border-b border-slate-200"
+          : "bg-white/80 backdrop-blur-md border-b border-white/20 sm:bg-white/50 sm:backdrop-blur-sm",
       )}
       animate={{ y: visible ? 0 : -100 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
@@ -115,6 +116,8 @@ export function Navbar() {
         </nav>
       </div>
 
+      </motion.header>
+
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {mobileOpen && (
@@ -124,7 +127,7 @@ export function Navbar() {
           />
         )}
       </AnimatePresence>
-    </motion.header>
+    </>
   );
 }
 
@@ -200,9 +203,6 @@ function DesktopNavLink({ item, pathname }: { item: any; pathname: string }) {
   );
 }
 
-/**
- * Mobile Menu Component
- */
 function MobileMenu({
   navigation,
   onClose,
@@ -210,6 +210,8 @@ function MobileMenu({
   navigation: any[];
   onClose: () => void;
 }) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+
   return (
     <>
       <motion.div
@@ -224,49 +226,77 @@ function MobileMenu({
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className="fixed inset-y-0 right-0 z-[70] w-full max-w-xs bg-white p-6 shadow-2xl lg:hidden"
+        className="fixed inset-y-0 right-0 z-[70] flex w-full max-w-sm flex-col bg-white shadow-2xl lg:hidden"
       >
-        <div className="flex items-center justify-between pb-8">
+        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
           <span className="text-lg font-bold text-slate-900">Menu</span>
-          <button onClick={onClose} className="rounded-full bg-slate-100 p-2">
+          <button onClick={onClose} className="rounded-full bg-slate-100 p-2 transition hover:bg-slate-200">
             <X className="h-5 w-5 text-slate-600" />
           </button>
         </div>
 
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-2">
           {navigation.map((item) => (
-            <div key={item.label} className="space-y-2">
-              <Link
-                href={item.href ?? "#"}
-                onClick={!item.children ? onClose : undefined}
-                className="block text-xl font-bold text-slate-900"
-              >
-                {item.label}
-              </Link>
+            <div key={item.label} className="flex flex-col">
+              {item.children ? (
+                <button
+                  onClick={() =>
+                    setExpanded(expanded === item.label ? null : item.label)
+                  }
+                  className="flex w-full items-center justify-between py-3 text-left text-lg font-bold text-slate-900"
+                >
+                  {item.label}
+                  <ChevronDown
+                    className={cn(
+                      "h-5 w-5 text-slate-400 transition-transform",
+                      expanded === item.label && "rotate-180"
+                    )}
+                  />
+                </button>
+              ) : (
+                <Link
+                  href={item.href ?? "#"}
+                  onClick={onClose}
+                  className="block py-3 text-lg font-bold text-slate-900"
+                >
+                  {item.label}
+                </Link>
+              )}
+
               {item.children && (
-                <div className="ml-4 space-y-3 border-l-2 border-slate-100 pl-4">
-                  {item.children.map((child: any) => (
-                    <Link
-                      key={child.href}
-                      href={child.href}
-                      onClick={onClose}
-                      className="flex items-center gap-2 text-slate-600 transition-colors hover:text-primary"
+                <AnimatePresence>
+                  {expanded === item.label && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
                     >
-                      <ArrowRight className="h-3 w-3" />
-                      {child.label}
-                    </Link>
-                  ))}
-                </div>
+                      <div className="mt-2 mb-4 flex flex-col gap-3 border-l-2 border-slate-100 pl-4 ml-2">
+                        {item.children.map((child: any) => (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            onClick={onClose}
+                            className="flex items-center gap-2 py-1.5 text-[15px] font-medium text-slate-600 transition-colors hover:text-primary"
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               )}
             </div>
           ))}
         </div>
 
-        <div className="absolute bottom-8 left-6 right-6">
+        <div className="border-t border-slate-100 p-6">
           <Link
             href="/contact-us"
             onClick={onClose}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 font-bold text-white shadow-lg shadow-primary/20"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-white shadow-lg shadow-primary/20 transition hover:bg-primary-dark"
           >
             Get Started
           </Link>

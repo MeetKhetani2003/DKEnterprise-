@@ -25,7 +25,7 @@ export function SectorCarousel({ sectors }: { sectors: Sector[] }) {
   }, [sectors.length]);
 
   return (
-    <div className="relative overflow-hidden mt-12 rounded-[2rem] border border-slate-200 h-[80vh] bg-white">
+    <div className="relative overflow-hidden mt-8 sm:mt-12 rounded-[1.5rem] sm:rounded-[2rem] border border-slate-200 h-auto lg:h-[80vh] bg-white">
       <AnimatePresence mode="wait">
         <motion.div
           key={active}
@@ -36,7 +36,7 @@ export function SectorCarousel({ sectors }: { sectors: Sector[] }) {
           className="grid lg:grid-cols-2"
         >
           {/* LEFT IMAGE */}
-          <div className="relative h-[80vh] w-full">
+          <div className="relative h-[40vh] sm:h-[50vh] lg:h-[80vh] w-full">
             <Image
               src={sectors[active].image}
               alt={sectors[active].title}
@@ -46,12 +46,12 @@ export function SectorCarousel({ sectors }: { sectors: Sector[] }) {
           </div>
 
           {/* RIGHT CONTENT */}
-          <div className="flex flex-col justify-center px-8 py-10 sm:px-12 lg:px-16">
+          <div className="flex flex-col justify-center px-6 py-10 sm:px-12 lg:px-16 lg:h-[80vh] pb-20 lg:pb-10">
             <p className="text-xs tracking-[0.2em] text-slate-400 uppercase">
               {sectors[active].tag}
             </p>
 
-            <h2 className="mt-4 text-4xl sm:text-5xl font-semibold text-slate-900 leading-tight">
+            <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-semibold text-slate-900 leading-tight">
               {sectors[active].title}
             </h2>
 
@@ -73,7 +73,7 @@ export function SectorCarousel({ sectors }: { sectors: Sector[] }) {
         </motion.div>
       </AnimatePresence>
       {/* DOTS */}
-      <div className="absolute bottom-4 left-12 -translate-x-1/2 flex gap-2 ">
+      <div className="absolute bottom-6 lg:bottom-10 left-1/2 lg:left-1/2 -translate-x-1/2 flex gap-2">
         {sectors.map((_, index) => (
           <button
             key={index}

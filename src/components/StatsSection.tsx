@@ -62,7 +62,7 @@ export function StatsSection({
       <div className="container-shell">
         {/* ❌ Removed outer background */}
         <div className="px-6 py-10 sm:px-10 lg:px-14 lg:py-14">
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
             {stats.map((stat, index) => (
               <motion.div
                 key={stat.label}

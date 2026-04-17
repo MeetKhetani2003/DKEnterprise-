@@ -25,7 +25,7 @@ export function OfficeSection() {
       />
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-200">
+      <div className="flex gap-2 border-b border-slate-200 overflow-x-auto whitespace-nowrap scrollbar-hide">
         <button
           onClick={() => setActiveTab("offices")}
           className={`px-4 py-3 text-sm font-medium border-b-2 transition ${
