@@ -84,19 +84,7 @@ export function Footer() {
                 contact@dkenterprise.com
               </p>
             </div>
-            <form className="mt-6 rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
-              <label className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">Newsletter</label>
-              <div className="mt-3 flex items-center gap-2">
-                <input
-                  type="email"
-                  placeholder="Your email"
-                  className="min-w-0 flex-1 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-primary-light focus:outline-none"
-                />
-                <button type="submit" className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white transition hover:bg-primary-dark">
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            </form>
+           
           </div>
         </div>
 
