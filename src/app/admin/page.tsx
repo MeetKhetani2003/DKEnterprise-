@@ -496,23 +496,19 @@ export default function AdminDashboard() {
                     {selectedApplication.skills}
                   </p>
                 </div>
-                {selectedApplication.resume && (
+                {selectedApplication.resumeFileId && (
                   <div>
                     <label className="block text-sm font-medium text-slate-700">
                       Resume
                     </label>
                     <button
                       onClick={() =>
-                        downloadFile(
-                          selectedApplication.resume!.data,
-                          selectedApplication.resume!.name,
-                          selectedApplication.resume!.type,
-                        )
+                        downloadFile(selectedApplication.resumeFileId!, "resumes")
                       }
                       className="mt-1 inline-flex items-center px-3 py-1 border border-slate-300 rounded-md text-sm font-medium text-slate-700 bg-white hover:bg-slate-50"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      Download Resume ({selectedApplication.resume.name})
+                      Download Resume
                     </button>
                   </div>
                 )}
@@ -587,7 +583,7 @@ export default function AdminDashboard() {
                     {selectedEnquiry.message}
                   </p>
                 </div>
-                {selectedEnquiry.attachment && (
+                {selectedEnquiry.attachmentFileId && (
                   <div>
                     <label className="block text-sm font-medium text-slate-700">
                       Attachment
@@ -595,15 +591,14 @@ export default function AdminDashboard() {
                     <button
                       onClick={() =>
                         downloadFile(
-                          selectedEnquiry.attachment!.data,
-                          selectedEnquiry.attachment!.name,
-                          selectedEnquiry.attachment!.type,
+                          selectedEnquiry.attachmentFileId!,
+                          "attachments",
                         )
                       }
                       className="mt-1 inline-flex items-center px-3 py-1 border border-slate-300 rounded-md text-sm font-medium text-slate-700 bg-white hover:bg-slate-50"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      Download Attachment ({selectedEnquiry.attachment.name})
+                      Download Attachment
                     </button>
                   </div>
                 )}

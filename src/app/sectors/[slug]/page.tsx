@@ -33,6 +33,8 @@ export default function SectorPage({ params }: { params: { slug: string } }) {
 
   if (!sector) notFound();
 
+  const sectorImages = sector.features.map((feature) => feature.image);
+
   return (
     <PageTransition>
       {/* ✅ HERO */}
@@ -54,11 +56,11 @@ export default function SectorPage({ params }: { params: { slug: string } }) {
       </section>
 
       {/* ✅ PHOTOS */}
-      {sector.images && (
+      {sectorImages.length > 0 && (
         <section className="section-padding pt-0">
           <div className="container-shell">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {sector.images.map((img, index) => (
+              {sectorImages.map((img, index) => (
                 <div
                   key={index}
                   className="group relative h-[240px] overflow-hidden rounded-[1.5rem]"

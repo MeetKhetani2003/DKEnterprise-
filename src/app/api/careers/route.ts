@@ -62,8 +62,8 @@ export async function POST(request: Request) {
     if (resume instanceof File) {
       const bucket = new GridFSBucket(db, { bucketName: "resumes" });
       const uploadStream = bucket.openUploadStream(resume.name, {
-        contentType: resume.type,
         metadata: {
+          contentType: resume.type || "application/octet-stream",
           originalName: resume.name,
           size: resume.size,
           uploadedAt: new Date(),
@@ -72,10 +72,9 @@ export async function POST(request: Request) {
 
       const buffer = await resume.arrayBuffer();
       await new Promise((resolve, reject) => {
-        uploadStream.end(Buffer.from(buffer), (error) => {
-          if (error) reject(error);
-          else resolve(undefined);
-        });
+        uploadStream.once("error", reject);
+        uploadStream.once("finish", resolve);
+        uploadStream.end(Buffer.from(buffer));
       });
 
       resumeFileId = uploadStream.id;
@@ -89,7 +88,7 @@ export async function POST(request: Request) {
     };
 
     // Insert into MongoDB
-    const insertResult = await collection.insertOne(applicationData);
+    await collection.insertOne(applicationData);
 
     const fields = {
       Salutation: parsed.data.salutation || "N/A",

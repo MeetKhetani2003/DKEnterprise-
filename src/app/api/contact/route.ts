@@ -63,8 +63,8 @@ export async function POST(request: Request) {
     if (attachment instanceof File) {
       const bucket = new GridFSBucket(db, { bucketName: "attachments" });
       const uploadStream = bucket.openUploadStream(attachment.name, {
-        contentType: attachment.type,
         metadata: {
+          contentType: attachment.type || "application/octet-stream",
           originalName: attachment.name,
           size: attachment.size,
           uploadedAt: new Date(),
@@ -73,10 +73,9 @@ export async function POST(request: Request) {
 
       const buffer = await attachment.arrayBuffer();
       await new Promise((resolve, reject) => {
-        uploadStream.end(Buffer.from(buffer), (error) => {
-          if (error) reject(error);
-          else resolve(undefined);
-        });
+        uploadStream.once("error", reject);
+        uploadStream.once("finish", resolve);
+        uploadStream.end(Buffer.from(buffer));
       });
 
       attachmentFileId = uploadStream.id;
