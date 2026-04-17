@@ -18,12 +18,11 @@ type ApiResponse = {
   emailStatus?: string;
 };
 
-const fieldLabelClass = "mb-1.5 block text-[11px] font-medium text-slate-600";
-const fieldClass =
-  "h-10 w-full rounded-[4px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500";
-const textareaClass =
-  "min-h-20 w-full rounded-[4px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500";
-const sectionClass = "border-t border-slate-200 pt-5";
+const fieldLabelClass =
+  "mb-2 block text-sm font-medium tracking-tight text-slate-700";
+const fieldClass = "input-base h-12 rounded-2xl";
+const textareaClass = "input-base min-h-28 rounded-2xl py-3";
+const sectionClass = "border-t border-slate-200/70 pt-6";
 
 function downloadBase64Pdf(base64: string, fileName: string) {
   const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
@@ -39,7 +38,7 @@ function downloadBase64Pdf(base64: string, fileName: string) {
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
 
-  return <p className="mt-1 text-[11px] text-rose-500">{message}</p>;
+  return <p className="mt-2 text-xs text-rose-500">{message}</p>;
 }
 
 export function CareersForm() {
@@ -97,24 +96,26 @@ export function CareersForm() {
   };
 
   return (
-    <div className="rounded-xl border border-slate-300 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:p-6">
-      <div className="mb-5">
-        <h3 className="text-lg font-semibold text-slate-900">Get In Touch</h3>
-        <p className="mt-1 text-[11px] text-slate-600">
-          Submit the form below and our representative will connect with you
-          soon.
+    <div className="card-surface rounded-[1.75rem] p-6 sm:p-8">
+      <div className="mb-8">
+        <h3 className="text-2xl font-semibold tracking-tight text-slate-900">
+          Apply for Opportunities
+        </h3>
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
+          Submit the form below and our recruitment team will review your
+          profile and connect with you soon.
         </p>
       </div>
 
       <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
         <section>
-          <p className="mb-3 text-[11px] font-semibold text-slate-700">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.24em] text-primary-dark">
             Personal Details
           </p>
 
           <div className="grid gap-4 lg:grid-cols-2">
             <div>
-              <div className="grid gap-3 sm:grid-cols-[140px,minmax(0,1fr)]">
+              <div className="grid gap-4 sm:grid-cols-[140px,minmax(0,1fr)]">
                 <div>
                   <label className={fieldLabelClass}>Salutation</label>
                   <select {...register("salutation")} className={fieldClass}>
@@ -176,13 +177,13 @@ export function CareersForm() {
                 {["Male", "Female", "Other"].map((gender) => (
                   <label
                     key={gender}
-                    className="inline-flex items-center gap-2 text-xs text-slate-700"
+                    className="inline-flex items-center gap-2 text-sm text-slate-700"
                   >
                     <input
                       type="radio"
                       value={gender}
                       {...register("gender")}
-                      className="h-3.5 w-3.5 border-slate-300 text-orange-500 focus:ring-orange-500"
+                      className="h-4 w-4 border-slate-300 text-primary focus:ring-primary"
                     />
                     <span>{gender}</span>
                   </label>
@@ -194,13 +195,15 @@ export function CareersForm() {
         </section>
 
         <section className={sectionClass}>
-          <p className="mb-3 text-[11px] font-semibold text-slate-700">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.24em] text-primary-dark">
             Professional Details
           </p>
 
           <div className="grid gap-4 lg:grid-cols-2">
             <div>
-              <label className={fieldLabelClass}>Current Employer (if any)</label>
+              <label className={fieldLabelClass}>
+                Current Employer (if any)
+              </label>
               <input
                 {...register("currentEmployer")}
                 placeholder="Enter employer"
@@ -253,7 +256,7 @@ export function CareersForm() {
         </section>
 
         <section className={sectionClass}>
-          <p className="mb-3 text-[11px] font-semibold text-slate-700">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.24em] text-primary-dark">
             Resume Upload
           </p>
 
@@ -261,8 +264,8 @@ export function CareersForm() {
             <div className="lg:col-span-2">
               <label className={fieldLabelClass}>Upload Resume</label>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-[4px] border border-slate-300 bg-white px-3 text-xs font-medium text-slate-700 transition hover:bg-slate-50">
-                  <UploadCloud className="h-3.5 w-3.5" />
+                <label className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-5 text-sm font-semibold text-primary-dark transition hover:border-primary/40 hover:bg-primary/10">
+                  <UploadCloud className="h-4 w-4" />
                   Upload Files
                   <input
                     {...resumeField}
@@ -275,7 +278,7 @@ export function CareersForm() {
                     }}
                   />
                 </label>
-                <span className="text-[11px] text-slate-500">
+                <span className="text-sm text-slate-500">
                   {selectedFile
                     ? `${selectedFile.name} (${(
                         selectedFile.size /
@@ -285,7 +288,9 @@ export function CareersForm() {
                     : "No file chosen. PDF, DOC, or DOCX up to 5MB"}
                 </span>
               </div>
-              <FieldError message={errors.resume?.message as string | undefined} />
+              <FieldError
+                message={errors.resume?.message as string | undefined}
+              />
             </div>
           </div>
         </section>
@@ -294,18 +299,18 @@ export function CareersForm() {
           <button
             type="submit"
             disabled={isPending}
-            className="inline-flex min-w-32 items-center justify-center rounded-[4px] bg-red-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70"
+            className="button-primary min-w-[10rem] border-0"
           >
             {isPending ? (
               <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
             ) : null}
-            Submit Query
+            Submit Application
           </button>
         </div>
       </form>
 
       {serverMessage ? (
-        <div className="mt-5 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+        <div className="mt-6 rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
           <div className="flex items-start gap-3">
             <CheckCircle2 className="mt-0.5 h-5 w-5" />
             <div>

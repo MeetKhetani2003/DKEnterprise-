@@ -8,7 +8,6 @@ import { z } from "zod";
 
 import { contactSchema } from "@/lib/form-schemas";
 import {
-  countries,
   companySizes,
   indianStates,
   services,
@@ -36,6 +35,15 @@ function downloadBase64Pdf(base64: string, fileName: string) {
   URL.revokeObjectURL(url);
 }
 
+const fieldLabelClass =
+  "mb-2 block text-sm font-medium tracking-tight text-slate-700";
+const radioLabelClass =
+  "flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/70 px-4 py-3 transition hover:border-primary/30 hover:bg-primary/5";
+const checkboxLabelClass =
+  "flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/70 px-4 py-4";
+const sectionTitleClass =
+  "block text-sm font-medium tracking-tight text-slate-700";
+
 export function ContactForm() {
   const [serverMessage, setServerMessage] = useState<string | null>(null);
   const [emailStatus, setEmailStatus] = useState<string | null>(null);
@@ -58,7 +66,7 @@ export function ContactForm() {
       formData.append("phone", values.phone);
       formData.append("companyName", values.companyName || "");
       formData.append("companySize", values.companySize || "");
-      formData.append("country", values.country);
+      formData.append("country", values.country || "India");
       formData.append("state", values.state || "");
       formData.append("city", values.city || "");
       formData.append("inquiryReason", values.inquiryReason);
@@ -89,7 +97,7 @@ export function ContactForm() {
         <h3 className="text-2xl font-semibold tracking-tight text-slate-900">
           Contact Us
         </h3>
-        <p className="mt-3 text-sm leading-7 text-slate-600">
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
           Submit the form below and our representative will connect with you
           soon.
         </p>
@@ -101,9 +109,7 @@ export function ContactForm() {
       >
         {/* Your Name */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            Your Name
-          </label>
+          <label className={fieldLabelClass}>Your Name</label>
           <input
             {...register("name")}
             placeholder="Enter your Name"
@@ -116,9 +122,7 @@ export function ContactForm() {
 
         {/* Work Email */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            Work Email
-          </label>
+          <label className={fieldLabelClass}>Work Email</label>
           <input
             {...register("email")}
             type="email"
@@ -132,9 +136,7 @@ export function ContactForm() {
 
         {/* Phone Number */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            Phone Number
-          </label>
+          <label className={fieldLabelClass}>Phone Number</label>
           <input
             {...register("phone")}
             placeholder="Phone Number"
@@ -147,9 +149,7 @@ export function ContactForm() {
 
         {/* Company Name */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            Company Name
-          </label>
+          <label className={fieldLabelClass}>Company Name</label>
           <input
             {...register("companyName")}
             placeholder="Company Name"
@@ -164,9 +164,7 @@ export function ContactForm() {
 
         {/* Company Size */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            Company Size
-          </label>
+          <label className={fieldLabelClass}>Company Size</label>
           <select {...register("companySize")} className="input-base">
             <option value="">Small Enterprise</option>
             {companySizes.map((size) => (
@@ -182,31 +180,9 @@ export function ContactForm() {
           ) : null}
         </div>
 
-        {/* Country */}
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            Country
-          </label>
-          <select {...register("country")} className="input-base">
-            <option value="">India</option>
-            {countries.map((country) => (
-              <option key={country} value={country}>
-                {country}
-              </option>
-            ))}
-          </select>
-          {errors.country ? (
-            <p className="mt-2 text-xs text-rose-500">
-              {errors.country.message}
-            </p>
-          ) : null}
-        </div>
-
         {/* State */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            State
-          </label>
+          <label className={fieldLabelClass}>State</label>
           <select {...register("state")} className="input-base">
             <option value="">Enter state</option>
             {indianStates.map((state) => (
@@ -222,9 +198,7 @@ export function ContactForm() {
 
         {/* City */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            City
-          </label>
+          <label className={fieldLabelClass}>City</label>
           <input
             {...register("city")}
             placeholder="Enter city"
@@ -237,19 +211,19 @@ export function ContactForm() {
 
         {/* Inquiry Reason - Radio Buttons */}
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-slate-700 mb-3">
-            Please tell us what you&apos;re enquiring about?
+          <label className={`${sectionTitleClass} mb-3`}>
+            Please tell us what you're enquiring about?
           </label>
-          <div className="space-y-2">
+          <div className="grid gap-3 md:grid-cols-2">
             {inquiryReasons.map((reason) => (
-              <label key={reason} className="flex items-center">
+              <label key={reason} className={radioLabelClass}>
                 <input
                   type="radio"
                   {...register("inquiryReason")}
                   value={reason}
-                  className="h-4 w-4 text-primary"
+                  className="h-4 w-4 border-slate-300 text-primary focus:ring-primary"
                 />
-                <span className="ml-2 text-sm text-slate-700">{reason}</span>
+                <span className="text-sm text-slate-700">{reason}</span>
               </label>
             ))}
           </div>
@@ -261,8 +235,8 @@ export function ContactForm() {
         </div>
 
         {/* Service Selection */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-slate-700 mb-2">
+        <div>
+          <label className={fieldLabelClass}>
             Please select the service of your interest:
           </label>
           <select {...register("service")} className="input-base">
@@ -282,7 +256,7 @@ export function ContactForm() {
 
         {/* Message/Description */}
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-slate-700 mb-2">
+          <label className={fieldLabelClass}>
             Describe your enquiry or service of interest:
           </label>
           <textarea
@@ -300,13 +274,13 @@ export function ContactForm() {
 
         {/* Terms & Conditions Checkbox */}
         <div className="md:col-span-2">
-          <label className="flex items-start">
+          <label className={checkboxLabelClass}>
             <input
               type="checkbox"
               {...register("agreeToTerms")}
-              className="h-4 w-4 text-primary rounded mt-1"
+              className="mt-1 h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary"
             />
-            <span className="ml-3 text-sm text-slate-700">
+            <span className="text-sm leading-6 text-slate-700">
               I have read and agree to Terms and Conditions and to process my
               data by their Privacy Policy.
             </span>
@@ -323,7 +297,7 @@ export function ContactForm() {
           <button
             type="submit"
             disabled={isPending}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-8 py-3 font-semibold text-white transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-70 w-full"
+            className="button-primary w-full border-0"
           >
             {isPending ? (
               <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
