@@ -212,7 +212,7 @@ export function ContactForm() {
         {/* Inquiry Reason - Radio Buttons */}
         <div className="md:col-span-2">
           <label className={`${sectionTitleClass} mb-3`}>
-            Please tell us what you're enquiring about?
+            Please tell us what you&apos;re enquiring about?
           </label>
           <div className="grid gap-3 md:grid-cols-2">
             {inquiryReasons.map((reason) => (
