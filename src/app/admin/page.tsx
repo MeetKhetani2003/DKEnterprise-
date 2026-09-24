@@ -13,6 +13,10 @@ import {
   GraduationCap,
   FileText,
   MessageSquare,
+  LogOut,
+  Users,
+  Send,
+  FileSpreadsheet,
 } from "lucide-react";
 import { SendEmailForm } from "@/components/SendEmailForm";
 import { Login } from "@/components/admin/Login";
@@ -140,9 +144,9 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-slate-600">Loading dashboard...</p>
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto"></div>
+          <p className="text-slate-500 font-medium tracking-wide">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -160,95 +164,142 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-50/50 overflow-hidden font-sans">
       {/* Sidebar */}
-      <div className="w-64 bg-slate-900 text-slate-300 flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b border-slate-800">
-          <h1 className="text-xl font-bold text-white">Admin Dashboard</h1>
+      <div className="w-72 bg-[#0f172a] text-slate-300 flex flex-col shadow-2xl z-20 relative">
+        <div className="h-20 flex items-center px-8 border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-primary to-blue-400 flex items-center justify-center shadow-lg shadow-primary/20">
+              <User className="h-4 w-4 text-white" />
+            </div>
+            <h1 className="text-xl font-bold text-white tracking-tight">Admin Portal</h1>
+          </div>
         </div>
-        <nav className="flex-1 px-4 py-6 space-y-2">
+        <nav className="flex-1 px-4 py-8 space-y-3 overflow-y-auto">
+          <div className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Menu</div>
+          
           <button
             onClick={() => setActiveTab("careers")}
-            className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
               activeTab === "careers"
-                ? "bg-primary text-white"
-                : "hover:bg-slate-800 hover:text-white"
+                ? "bg-gradient-to-r from-primary/90 to-primary text-white shadow-lg shadow-primary/25"
+                : "hover:bg-white/5 hover:text-white text-slate-400"
             }`}
           >
-            Career Applications ({careerApplications.length})
+            <Briefcase size={18} className={activeTab === "careers" ? "text-white" : "text-slate-400"} />
+            Career Applications
+            <span className={`ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-bold ${activeTab === "careers" ? "bg-white/20 text-white" : "bg-slate-800 text-slate-400"}`}>
+              {careerApplications.length}
+            </span>
           </button>
+          
           <button
             onClick={() => setActiveTab("contacts")}
-            className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
               activeTab === "contacts"
-                ? "bg-primary text-white"
-                : "hover:bg-slate-800 hover:text-white"
+                ? "bg-gradient-to-r from-primary/90 to-primary text-white shadow-lg shadow-primary/25"
+                : "hover:bg-white/5 hover:text-white text-slate-400"
             }`}
           >
-            Contact Enquiries ({contactEnquiries.length})
+            <MessageSquare size={18} className={activeTab === "contacts" ? "text-white" : "text-slate-400"} />
+            Contact Enquiries
+            <span className={`ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-bold ${activeTab === "contacts" ? "bg-white/20 text-white" : "bg-slate-800 text-slate-400"}`}>
+              {contactEnquiries.length}
+            </span>
           </button>
-          <button
-            onClick={() => setActiveTab("send-email")}
-            className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-              activeTab === "send-email"
-                ? "bg-primary text-white"
-                : "hover:bg-slate-800 hover:text-white"
-            }`}
-          >
-            Send Email
-          </button>
+
           <button
             onClick={() => setActiveTab("tenders")}
-            className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
               activeTab === "tenders"
-                ? "bg-primary text-white"
-                : "hover:bg-slate-800 hover:text-white"
+                ? "bg-gradient-to-r from-primary/90 to-primary text-white shadow-lg shadow-primary/25"
+                : "hover:bg-white/5 hover:text-white text-slate-400"
             }`}
           >
+            <FileSpreadsheet size={18} className={activeTab === "tenders" ? "text-white" : "text-slate-400"} />
             Tenders
           </button>
+
+          <button
+            onClick={() => setActiveTab("send-email")}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
+              activeTab === "send-email"
+                ? "bg-gradient-to-r from-primary/90 to-primary text-white shadow-lg shadow-primary/25"
+                : "hover:bg-white/5 hover:text-white text-slate-400"
+            }`}
+          >
+            <Send size={18} className={activeTab === "send-email" ? "text-white" : "text-slate-400"} />
+            Send Email
+          </button>
+
           {userRole === "superadmin" && (
-            <button
-              onClick={() => setActiveTab("admins")}
-              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                activeTab === "admins"
-                  ? "bg-primary text-white"
-                  : "hover:bg-slate-800 hover:text-white"
-              }`}
-            >
-              Admins
-            </button>
+            <>
+              <div className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider mt-8 mb-4">Administration</div>
+              <button
+                onClick={() => setActiveTab("admins")}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
+                  activeTab === "admins"
+                    ? "bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-lg shadow-indigo-500/25"
+                    : "hover:bg-white/5 hover:text-white text-slate-400"
+                }`}
+              >
+                <Users size={18} className={activeTab === "admins" ? "text-white" : "text-slate-400"} />
+                Manage Admins
+              </button>
+            </>
           )}
         </nav>
-        <div className="p-4 border-t border-slate-800">
+        <div className="p-6 border-t border-white/5">
            <button 
              onClick={() => window.location.reload()} 
-             className="w-full text-center px-3 py-2 text-sm text-slate-400 hover:text-white"
+             className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-slate-400 bg-white/5 rounded-xl hover:bg-white/10 hover:text-white transition-all duration-300"
            >
+             <LogOut size={16} />
              Log Out
            </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white border-b border-slate-200">
-          <div className="px-6 h-16 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-slate-800 capitalize">
-              {activeTab.replace("-", " ")}
-            </h2>
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-slate-600">
-                Career Applications: <span className="font-semibold text-primary">{careerApplications.length}</span>
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-10">
+          <div className="px-8 h-20 flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-800 capitalize tracking-tight flex items-center gap-2">
+                {activeTab.replace("-", " ")}
+              </h2>
+              <p className="text-sm text-slate-500 mt-1 font-medium">Manage and view your {activeTab.replace("-", " ")}</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="hidden sm:flex items-center gap-6 bg-slate-50/80 px-5 py-2.5 rounded-2xl border border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                    <Briefcase size={16} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Careers</span>
+                    <span className="text-sm font-bold text-slate-700">{careerApplications.length}</span>
+                  </div>
+                </div>
+                <div className="h-8 w-px bg-slate-200"></div>
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                    <MessageSquare size={16} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Enquiries</span>
+                    <span className="text-sm font-bold text-slate-700">{contactEnquiries.length}</span>
+                  </div>
+                </div>
               </div>
-              <div className="text-sm text-slate-600">
-                Contact Enquiries: <span className="font-semibold text-primary">{contactEnquiries.length}</span>
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center text-white shadow-lg shadow-primary/20 cursor-pointer hover:scale-105 transition-transform">
+                <span className="font-bold text-sm">{userRole === 'superadmin' ? 'SA' : 'AD'}</span>
               </div>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-8 scroll-smooth">
 
         {activeTab === "admins" && (
           <AdminsTab />

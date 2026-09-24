@@ -28,16 +28,16 @@ export async function POST(req: Request) {
     }
 
     await dbConnect();
-    const { email, password } = await req.json();
+    const { username, password } = await req.json();
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ username });
     if (existingUser) {
       return NextResponse.json({ message: "Email already exists" }, { status: 400 });
     }
 
     const hashedPassword = bcrypt.hashSync(password, 10);
     const newUser = new User({
-      email,
+      username,
       password: hashedPassword,
       role: "admin",
     });

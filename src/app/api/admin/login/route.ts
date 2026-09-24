@@ -7,9 +7,9 @@ import { signToken } from "@/lib/auth";
 export async function POST(req: Request) {
   try {
     await dbConnect();
-    const { email, password } = await req.json();
+    const { username, password } = await req.json();
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ username });
     if (!user) {
       return NextResponse.json({ message: "Invalid credentials" }, { status: 401 });
     }

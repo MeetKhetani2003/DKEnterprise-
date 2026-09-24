@@ -60,6 +60,10 @@ export function Navbar() {
     }
   }, [mobileOpen]);
 
+  if (pathname.startsWith("/admin")) {
+    return null;
+  }
+
   return (
     <>
       <motion.header

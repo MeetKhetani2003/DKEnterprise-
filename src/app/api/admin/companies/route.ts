@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongoose";
-import Tender from "@/lib/models/Tender";
+import Company from "@/lib/models/Company";
 import { getUserFromCookie } from "@/lib/auth";
 
 export async function GET(req: Request) {
@@ -11,15 +11,10 @@ export async function GET(req: Request) {
     }
 
     await dbConnect();
-    
-    const query: any = user.role === "superadmin" ? { isDeleted: { $ne: true } } : { createdBy: user.id, isDeleted: { $ne: true } };
-    
-    // Fetch and populate createdBy if you want to show who created it
-    const tenders = await Tender.find(query).populate("createdBy", "email role").sort({ createdAt: -1 });
-
-    return NextResponse.json(tenders);
+    const companies = await Company.find({}).sort({ name: 1 });
+    return NextResponse.json(companies);
   } catch (error) {
-    console.error("Fetch tenders error:", error);
+    console.error("Fetch companies error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }
@@ -32,17 +27,22 @@ export async function POST(req: Request) {
     }
 
     await dbConnect();
-    const data = await req.json();
+    const { name } = await req.json();
 
-    const newTender = new Tender({
-      ...data,
-      createdBy: user.id,
-    });
+    if (!name) {
+      return NextResponse.json({ message: "Company name is required" }, { status: 400 });
+    }
 
-    await newTender.save();
-    return NextResponse.json({ message: "Tender created successfully", tender: newTender }, { status: 201 });
+    // Check if it exists
+    let company = await Company.findOne({ name: new RegExp(`^${name}$`, 'i') });
+    if (!company) {
+      company = new Company({ name });
+      await company.save();
+    }
+
+    return NextResponse.json({ message: "Company created successfully", company }, { status: 201 });
   } catch (error) {
-    console.error("Create tender error:", error);
+    console.error("Create company error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }
