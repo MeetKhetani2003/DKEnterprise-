@@ -15,6 +15,9 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { SendEmailForm } from "@/components/SendEmailForm";
+import { Login } from "@/components/admin/Login";
+import { TendersTab } from "@/components/admin/TendersTab";
+import { AdminsTab } from "@/components/admin/AdminsTab";
 
 type CareerApplication = {
   _id: string;
@@ -45,7 +48,9 @@ type ContactEnquiry = {
 };
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"careers" | "contacts" | "send-email">("careers");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState("");
+  const [activeTab, setActiveTab] = useState<"careers" | "contacts" | "send-email" | "tenders" | "admins">("careers");
   const [careerApplications, setCareerApplications] = useState<
     CareerApplication[]
   >([]);
@@ -143,69 +148,115 @@ export default function AdminDashboard() {
     );
   }
 
+  if (!isAuthenticated) {
+    return (
+      <Login
+        onLogin={(role) => {
+          setIsAuthenticated(true);
+          setUserRole(role);
+        }}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <h1 className="text-2xl font-bold text-slate-900">
-              Admin Dashboard
-            </h1>
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-slate-600">
-                Career Applications:{" "}
-                <span className="font-semibold text-primary">
-                  {careerApplications.length}
-                </span>
-              </div>
-              <div className="text-sm text-slate-600">
-                Contact Enquiries:{" "}
-                <span className="font-semibold text-primary">
-                  {contactEnquiries.length}
-                </span>
-              </div>
-            </div>
-          </div>
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
+      {/* Sidebar */}
+      <div className="w-64 bg-slate-900 text-slate-300 flex flex-col">
+        <div className="h-16 flex items-center px-6 border-b border-slate-800">
+          <h1 className="text-xl font-bold text-white">Admin Dashboard</h1>
+        </div>
+        <nav className="flex-1 px-4 py-6 space-y-2">
+          <button
+            onClick={() => setActiveTab("careers")}
+            className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+              activeTab === "careers"
+                ? "bg-primary text-white"
+                : "hover:bg-slate-800 hover:text-white"
+            }`}
+          >
+            Career Applications ({careerApplications.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("contacts")}
+            className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+              activeTab === "contacts"
+                ? "bg-primary text-white"
+                : "hover:bg-slate-800 hover:text-white"
+            }`}
+          >
+            Contact Enquiries ({contactEnquiries.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("send-email")}
+            className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+              activeTab === "send-email"
+                ? "bg-primary text-white"
+                : "hover:bg-slate-800 hover:text-white"
+            }`}
+          >
+            Send Email
+          </button>
+          <button
+            onClick={() => setActiveTab("tenders")}
+            className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+              activeTab === "tenders"
+                ? "bg-primary text-white"
+                : "hover:bg-slate-800 hover:text-white"
+            }`}
+          >
+            Tenders
+          </button>
+          {userRole === "superadmin" && (
+            <button
+              onClick={() => setActiveTab("admins")}
+              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                activeTab === "admins"
+                  ? "bg-primary text-white"
+                  : "hover:bg-slate-800 hover:text-white"
+              }`}
+            >
+              Admins
+            </button>
+          )}
+        </nav>
+        <div className="p-4 border-t border-slate-800">
+           <button 
+             onClick={() => window.location.reload()} 
+             className="w-full text-center px-3 py-2 text-sm text-slate-400 hover:text-white"
+           >
+             Log Out
+           </button>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <div className="border-b border-slate-200">
-            <nav className="-mb-px flex space-x-8">
-              <button
-                onClick={() => setActiveTab("careers")}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === "careers"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
-                }`}
-              >
-                Career Applications ({careerApplications.length})
-              </button>
-              <button
-                onClick={() => setActiveTab("contacts")}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === "contacts"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
-                }`}
-              >
-                Contact Enquiries ({contactEnquiries.length})
-              </button>
-              <button
-                onClick={() => setActiveTab("send-email")}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === "send-email"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
-                }`}
-              >
-                Send Email
-              </button>
-            </nav>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="bg-white border-b border-slate-200">
+          <div className="px-6 h-16 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-slate-800 capitalize">
+              {activeTab.replace("-", " ")}
+            </h2>
+            <div className="flex items-center space-x-4">
+              <div className="text-sm text-slate-600">
+                Career Applications: <span className="font-semibold text-primary">{careerApplications.length}</span>
+              </div>
+              <div className="text-sm text-slate-600">
+                Contact Enquiries: <span className="font-semibold text-primary">{contactEnquiries.length}</span>
+              </div>
+            </div>
           </div>
-        </div>
+        </header>
+
+        <main className="flex-1 overflow-y-auto p-6">
+
+        {activeTab === "admins" && (
+          <AdminsTab />
+        )}
+
+        {activeTab === "tenders" && (
+          <TendersTab role={userRole} />
+        )}
 
         {activeTab === "careers" && (
           <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
@@ -703,6 +754,7 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
+        </main>
       </div>
     </div>
   );
