@@ -52,7 +52,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
 
     tender.isDeleted = true;
     tender.deleteReason = data.reason || "";
-    tender.deletedBy = user.id;
+    tender.deletedBy = user.id as any;
     tender.deletedAt = new Date();
     
     await tender.save();
