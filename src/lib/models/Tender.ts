@@ -1,6 +1,26 @@
-import mongoose from "mongoose";
+import mongoose, { Document, Model } from "mongoose";
 
-const TenderSchema = new mongoose.Schema({
+export interface ITender extends Document {
+  tenderNo: string;
+  departmentOrg: string;
+  tenderLastDate: string;
+  filed: string;
+  bidClosingTime: string;
+  location: string;
+  officeDocuments: string;
+  msePurchasePreference: string;
+  category: string;
+  contractPeriodYear: string;
+  manpower: string;
+  emdExemption: string;
+  turnoverExperienceExemption: string;
+  bidValue: string;
+  gstJsonFileTypeSoftware: string;
+  createdBy: mongoose.Types.ObjectId;
+  createdAt: Date;
+}
+
+const TenderSchema = new mongoose.Schema<ITender>({
   tenderNo: { type: String, required: true },
   departmentOrg: { type: String, required: true },
   tenderLastDate: { type: String, required: true },
@@ -27,4 +47,4 @@ const TenderSchema = new mongoose.Schema({
   },
 });
 
-export default mongoose.models.Tender || mongoose.model("Tender", TenderSchema);
+export default (mongoose.models.Tender as Model<ITender>) || mongoose.model<ITender>("Tender", TenderSchema);
