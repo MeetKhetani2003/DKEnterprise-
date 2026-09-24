@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 
-export function Login({ onLogin }: { onLogin: (role: string) => void }) {
-  const [email, setEmail] = useState("");
+export function Login({ onLogin }: { onLogin: (role: string, username: string) => void }) {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,11 +17,11 @@ export function Login({ onLogin }: { onLogin: (role: string) => void }) {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
       const data = await res.json();
       if (res.ok) {
-        onLogin(data.role);
+        onLogin(data.role, data.username);
       } else {
         setError(data.message || "Login failed");
       }
@@ -48,13 +48,13 @@ export function Login({ onLogin }: { onLogin: (role: string) => void }) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700">Email</label>
+            <label className="block text-sm font-medium text-slate-700">Username</label>
             <input
-              type="email"
+              type="text"
               required
               className="mt-1 block w-full rounded-md border-slate-300 shadow-sm p-2 border focus:border-primary focus:ring-primary"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
             />
           </div>
           <div>

@@ -54,6 +54,7 @@ type ContactEnquiry = {
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState("");
+  const [username, setUsername] = useState("");
   const [activeTab, setActiveTab] = useState<"careers" | "contacts" | "send-email" | "tenders" | "admins">("careers");
   const [careerApplications, setCareerApplications] = useState<
     CareerApplication[]
@@ -155,9 +156,10 @@ export default function AdminDashboard() {
   if (!isAuthenticated) {
     return (
       <Login
-        onLogin={(role) => {
+        onLogin={(role, uname) => {
           setIsAuthenticated(true);
           setUserRole(role);
+          setUsername(uname);
         }}
       />
     );
@@ -172,7 +174,9 @@ export default function AdminDashboard() {
             <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-primary to-blue-400 flex items-center justify-center shadow-lg shadow-primary/20">
               <User className="h-4 w-4 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-white tracking-tight">Admin Portal</h1>
+            <h1 className="text-xl font-bold text-white tracking-tight">
+              {userRole === 'superadmin' ? 'Superadmin' : username || 'Admin Portal'}
+            </h1>
           </div>
         </div>
         <nav className="flex-1 px-4 py-8 space-y-3 overflow-y-auto">

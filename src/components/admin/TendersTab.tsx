@@ -321,7 +321,7 @@ export function TendersTab({ role }: { role: string }) {
                     <option value="YES">YES</option>
                   </select>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.createdBy?.email || "Unknown"}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.createdBy?.username || "Unknown"}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                   <button 
                     onClick={() => { setTenderToDelete(tender._id); setShowDeleteModal(true); }}

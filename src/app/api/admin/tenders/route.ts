@@ -15,7 +15,7 @@ export async function GET(req: Request) {
     const query: any = user.role === "superadmin" ? { isDeleted: { $ne: true } } : { createdBy: user.id, isDeleted: { $ne: true } };
     
     // Fetch and populate createdBy if you want to show who created it
-    const tenders = await Tender.find(query).populate("createdBy", "email role").sort({ createdAt: -1 });
+    const tenders = await Tender.find(query).populate("createdBy", "username role").sort({ createdAt: -1 });
 
     return NextResponse.json(tenders);
   } catch (error) {

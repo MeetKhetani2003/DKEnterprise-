@@ -10,7 +10,7 @@ export function AdminsTab() {
   const [error, setError] = useState("");
   
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     password: "",
   });
 
@@ -48,7 +48,7 @@ export function AdminsTab() {
       if (res.ok) {
         setShowForm(false);
         fetchAdmins();
-        setFormData({ email: "", password: "" });
+        setFormData({ username: "", password: "" });
       } else {
         const data = await res.json();
         setError(data.message || "Failed to create admin");
@@ -83,8 +83,8 @@ export function AdminsTab() {
           {error && <div className="text-red-500 mb-4 text-sm">{error}</div>}
           <form onSubmit={handleSubmit} className="flex gap-4 items-end">
             <div className="flex-1">
-              <label className="block text-sm font-medium mb-1">Email</label>
-              <input type="email" required name="email" value={formData.email} onChange={handleChange} className="w-full border p-2 rounded" />
+              <label className="block text-sm font-medium mb-1">Username</label>
+              <input type="text" required name="username" value={formData.username} onChange={handleChange} className="w-full border p-2 rounded" />
             </div>
             <div className="flex-1">
               <label className="block text-sm font-medium mb-1">Password</label>
@@ -101,14 +101,14 @@ export function AdminsTab() {
         <table className="min-w-full divide-y divide-slate-200">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Email</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Username</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Created At</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-slate-200">
             {admins.map((admin) => (
               <tr key={admin._id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{admin.email}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{admin.username}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{new Date(admin.createdAt).toLocaleDateString()}</td>
               </tr>
             ))}

@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
     const token = signToken(user._id.toString(), user.role);
 
-    const response = NextResponse.json({ message: "Logged in successfully", role: user.role });
+    const response = NextResponse.json({ message: "Logged in successfully", role: user.role, username: user.username });
     response.cookies.set({
       name: "admin_token",
       value: token,
