@@ -7,6 +7,7 @@ import { Footer } from "../components/Footer";
 import { Navbar } from "../components/Navbar";
 import { getAbsoluteUrl } from "../lib/utils";
 import Saperator from "../components/Saperator";
+import { MainLayout } from "../components/MainLayout";
 
 export const metadata: Metadata = {
   metadataBase: new URL(getAbsoluteUrl()),
@@ -49,7 +50,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="text-slate-900 antialiased">
         <Navbar />
-        <main className="overflow-hidden pt-16">{children}</main>
+        <MainLayout>{children}</MainLayout>
         <Saperator />
 
 

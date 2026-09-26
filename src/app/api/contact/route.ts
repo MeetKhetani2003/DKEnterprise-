@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { contactSchema } from "@/lib/form-schemas";
 import { sendNotificationEmail } from "@/lib/form-utils";
+import dbConnect from "@/lib/mongoose";
+import ContactEnquiry from "@/lib/models/ContactEnquiry";
+import mongoose from "mongoose";
 
 export const runtime = "nodejs";
 
@@ -65,6 +68,46 @@ export async function POST(request: Request) {
       console.error("Error sending contact notification email:", emailError);
       emailStatus = "Notification email delivery failed (check SMTP settings).";
     }
+
+    let attachmentFileId = null;
+    const attachment = formData.get("attachment");
+
+    if (attachment instanceof File) {
+      const conn = await dbConnect();
+      const bucket = new mongoose.mongo.GridFSBucket(conn.connection.db, {
+        bucketName: "attachments",
+      });
+      const uploadStream = bucket.openUploadStream(attachment.name, {
+        metadata: { contentType: attachment.type || "application/octet-stream" },
+      });
+      const arrayBuffer = await attachment.arrayBuffer();
+      uploadStream.end(Buffer.from(arrayBuffer));
+      
+      await new Promise((resolve, reject) => {
+        uploadStream.on('finish', resolve);
+        uploadStream.on('error', reject);
+      });
+      attachmentFileId = uploadStream.id.toString();
+    } else {
+      await dbConnect();
+    }
+
+    const enquiryDoc = new ContactEnquiry({
+      name: parsed.data.name,
+      email: parsed.data.email,
+      phone: parsed.data.phone,
+      companyName: parsed.data.companyName,
+      companySize: parsed.data.companySize,
+      country: parsed.data.country,
+      state: parsed.data.state,
+      city: parsed.data.city,
+      inquiryReason: parsed.data.inquiryReason,
+      service: parsed.data.service,
+      message: parsed.data.message,
+      attachmentFileId: attachmentFileId,
+    });
+
+    await enquiryDoc.save();
 
     return NextResponse.json({
       success: true,

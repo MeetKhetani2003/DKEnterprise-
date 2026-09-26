@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, X, Trash2 } from "lucide-react";
+import { Plus, X, Trash2, Edit2 } from "lucide-react";
 
 export function TendersTab({ role }: { role: string }) {
   const [tenders, setTenders] = useState<any[]>([]);
@@ -11,7 +11,18 @@ export function TendersTab({ role }: { role: string }) {
   const [showForm, setShowForm] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [tenderToDelete, setTenderToDelete] = useState<string | null>(null);
+  const [editingTenderId, setEditingTenderId] = useState<string | null>(null);
   const [deleteReason, setDeleteReason] = useState("");
+  const [formError, setFormError] = useState("");
+
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterFiled, setFilterFiled] = useState("ALL");
+  const [filterCompany, setFilterCompany] = useState("ALL");
+  const [filterTechnicalStatus, setFilterTechnicalStatus] = useState("ALL");
+  const [filterAward, setFilterAward] = useState("ALL");
+  const [filterStartDate, setFilterStartDate] = useState("");
+  const [filterEndDate, setFilterEndDate] = useState("");
   
   const [formData, setFormData] = useState<{ companies: string[], [key: string]: any }>({
     companies: [],
@@ -66,12 +77,12 @@ export function TendersTab({ role }: { role: string }) {
       const res = await fetch("/api/admin/companies", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newCompany.trim() }),
+        body: JSON.stringify({ name: newCompany.trim().toUpperCase() }),
       });
       if (res.ok) {
         const data = await res.json();
         setAvailableCompanies([...availableCompanies, data.company]);
-        setFormData((prev: any) => ({ ...prev, companies: [...prev.companies, data.company.name] }));
+        setFormData((prev: any) => ({ ...prev, companies: [...prev.companies, data.company.name.toUpperCase()] }));
         setNewCompany("");
       }
     } catch (error) {
@@ -131,6 +142,25 @@ export function TendersTab({ role }: { role: string }) {
     }
   };
 
+  const handleFiledChange = async (tenderId: string, newFiled: string) => {
+    setTenders((prev) =>
+      prev.map((t) => (t._id === tenderId ? { ...t, filed: newFiled } : t))
+    );
+    try {
+      const res = await fetch(`/api/admin/tenders/${tenderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filed: newFiled }),
+      });
+      if (!res.ok) {
+        fetchTenders();
+      }
+    } catch (error) {
+      console.error("Failed to update filed status", error);
+      fetchTenders();
+    }
+  };
+
   const handleDeleteTender = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tenderToDelete) return;
@@ -152,39 +182,115 @@ export function TendersTab({ role }: { role: string }) {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleEditClick = (tender: any) => {
+    setEditingTenderId(tender._id);
+    setFormData({
+      companies: tender.companies || [],
+      tenderNo: tender.tenderNo || "",
+      departmentOrg: tender.departmentOrg || "",
+      tenderLastDate: tender.tenderLastDate || "",
+      filed: tender.filed || "NO",
+      bidClosingTime: tender.bidClosingTime || "",
+      location: tender.location || "",
+      officeDocuments: tender.officeDocuments || "",
+      msePurchasePreference: tender.msePurchasePreference || "NO",
+      category: tender.category || "",
+      contractPeriodYear: tender.contractPeriodYear || "",
+      manpower: tender.manpower || "",
+      emdExemption: tender.emdExemption || "NO",
+      emdValue: tender.emdValue || "",
+      turnoverExperienceExemption: tender.turnoverExperienceExemption || "NO",
+      bidValue: tender.bidValue || "",
+      technicalStatus: tender.technicalStatus || "No Status",
+      award: tender.award || "NO",
+    });
+    setFormError("");
+    setShowForm(true);
   };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value.toUpperCase() });
+  };
+
+  const isTenderNoDuplicate = formData.tenderNo 
+    ? tenders.some((t: any) => t.tenderNo === formData.tenderNo && t._id !== editingTenderId)
+    : false;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isTenderNoDuplicate) {
+      setFormError("TENDER NUMBER IS ALREADY EXIST");
+      return;
+    }
+    setFormError("");
     try {
-      const res = await fetch("/api/admin/tenders", {
-        method: "POST",
+      const url = editingTenderId ? `/api/admin/tenders/${editingTenderId}` : "/api/admin/tenders";
+      const method = editingTenderId ? "PATCH" : "POST";
+      
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
       if (res.ok) {
         setShowForm(false);
+        setEditingTenderId(null);
         fetchTenders();
         // Reset form
         setFormData({
           companies: [], tenderNo: "", departmentOrg: "", tenderLastDate: "", filed: "NO", bidClosingTime: "", location: "", officeDocuments: "", msePurchasePreference: "NO", category: "", contractPeriodYear: "", manpower: "", emdExemption: "NO", emdValue: "", turnoverExperienceExemption: "NO", bidValue: "", technicalStatus: "No Status", award: "NO",
         });
+      } else {
+        const data = await res.json();
+        setFormError(data.message || "Failed to save tender");
       }
     } catch (error) {
-      console.error("Failed to create tender", error);
+      console.error("Failed to save tender", error);
+      setFormError("An unexpected error occurred");
     }
   };
 
   if (loading) return <div>Loading tenders...</div>;
+
+  // Derived state for filtering and sorting
+  const filteredTenders = tenders.filter(tender => {
+    // Search Query
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch = 
+      (tender.tenderNo && tender.tenderNo.toLowerCase().includes(searchLower)) ||
+      (tender.departmentOrg && tender.departmentOrg.toLowerCase().includes(searchLower)) ||
+      (tender.companies && tender.companies.join(" ").toLowerCase().includes(searchLower));
+
+    // Filters
+    const matchesFiled = filterFiled === "ALL" || tender.filed === filterFiled;
+    const matchesCompany = filterCompany === "ALL" || (tender.companies && tender.companies.includes(filterCompany));
+    const matchesTechStatus = filterTechnicalStatus === "ALL" || tender.technicalStatus === filterTechnicalStatus || (!tender.technicalStatus && filterTechnicalStatus === "No Status");
+    const matchesAward = filterAward === "ALL" || tender.award === filterAward;
+    
+    const tenderDate = tender.tenderLastDate ? new Date(tender.tenderLastDate).getTime() : 0;
+    const matchesStartDate = !filterStartDate || tenderDate >= new Date(filterStartDate).getTime();
+    const matchesEndDate = !filterEndDate || tenderDate <= new Date(filterEndDate).getTime();
+
+    return matchesSearch && matchesFiled && matchesCompany && matchesTechStatus && matchesAward && matchesStartDate && matchesEndDate;
+  }).sort((a, b) => {
+    // Sort by closing date ascending
+    const dateA = a.tenderLastDate ? new Date(a.tenderLastDate).getTime() : 0;
+    const dateB = b.tenderLastDate ? new Date(b.tenderLastDate).getTime() : 0;
+    return dateA - dateB;
+  });
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
       <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
         <h2 className="text-lg font-semibold text-slate-900">Tenders</h2>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => {
+            setEditingTenderId(null);
+            setFormData({
+              companies: [], tenderNo: "", departmentOrg: "", tenderLastDate: "", filed: "NO", bidClosingTime: "", location: "", officeDocuments: "", msePurchasePreference: "NO", category: "", contractPeriodYear: "", manpower: "", emdExemption: "NO", emdValue: "", turnoverExperienceExemption: "NO", bidValue: "", technicalStatus: "No Status", award: "NO",
+            });
+            setShowForm(true);
+          }}
           className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-md hover:bg-slate-800"
         >
           <Plus size={16} /> Add Tender
@@ -194,11 +300,20 @@ export function TendersTab({ role }: { role: string }) {
       {showForm && (
         <div className="p-6 border-b border-slate-200 bg-slate-50">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-medium text-slate-900">New Tender Form</h3>
-            <button onClick={() => setShowForm(false)} className="text-slate-500 hover:text-slate-700">
+            <h3 className="font-medium text-slate-900">{editingTenderId ? "Edit Tender Form" : "New Tender Form"}</h3>
+            <button onClick={() => {
+              setShowForm(false);
+              setEditingTenderId(null);
+              setFormError("");
+            }} className="text-slate-500 hover:text-slate-700">
               <X size={20} />
             </button>
           </div>
+          {formError && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm font-medium">
+              {formError}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Fields matching the image exactly */}
             <div className="md:col-span-2">
@@ -220,14 +335,18 @@ export function TendersTab({ role }: { role: string }) {
                   type="text"
                   placeholder="Add new company..."
                   value={newCompany}
-                  onChange={(e) => setNewCompany(e.target.value)}
-                  className="flex-1 border p-2 rounded text-sm"
+                  onChange={(e) => setNewCompany(e.target.value.toUpperCase())}
+                  className="flex-1 border p-2 rounded text-sm uppercase"
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCompany(); } }}
                 />
                 <button type="button" onClick={handleAddCompany} className="bg-slate-200 px-4 py-2 rounded text-sm hover:bg-slate-300">Add</button>
               </div>
             </div>
-            <div><label className="block text-sm">TENDER NO</label><input required name="tenderNo" value={formData.tenderNo} onChange={handleChange} className="w-full border p-2 rounded" /></div>
+            <div>
+              <label className="block text-sm">TENDER NO</label>
+              <input required name="tenderNo" value={formData.tenderNo} onChange={handleChange} className={`w-full border p-2 rounded ${isTenderNoDuplicate ? 'border-red-500 outline-none ring-1 ring-red-500' : ''}`} />
+              {isTenderNoDuplicate && <span className="text-red-500 text-xs mt-1 block font-bold">TENDER NUMBER IS ALREADY EXIST</span>}
+            </div>
             <div><label className="block text-sm">DEPARTMENT/ORG</label><input required name="departmentOrg" value={formData.departmentOrg} onChange={handleChange} className="w-full border p-2 rounded" /></div>
             <div><label className="block text-sm">TENDER LAST DATE</label><input type="date" required name="tenderLastDate" value={formData.tenderLastDate} onChange={handleChange} className="w-full border p-2 rounded" /></div>
             <div><label className="block text-sm">FILED</label><select name="filed" value={formData.filed} onChange={handleChange} className="w-full border p-2 rounded"><option value="YES">YES</option><option value="NO">NO</option></select></div>
@@ -247,12 +366,116 @@ export function TendersTab({ role }: { role: string }) {
             
             <div className="md:col-span-2 flex justify-end">
               <button type="submit" className="bg-slate-900 text-white px-6 py-2 rounded hover:bg-slate-800">
-                Submit Tender
+                {editingTenderId ? "Update Tender" : "Submit Tender"}
               </button>
             </div>
           </form>
         </div>
       )}
+
+      {/* Search and Filters */}
+      <div className="p-4 bg-slate-50 border-b border-slate-200">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 mb-1">Search</label>
+
+          <input
+            type="text"
+            placeholder="Tender No, Dept, Company..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full border border-slate-300 p-2 rounded text-sm bg-white"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-slate-500 mb-1">Company</label>
+          <select
+            value={filterCompany}
+            onChange={(e) => setFilterCompany(e.target.value)}
+            className="w-full border border-slate-300 p-2 rounded text-sm bg-white"
+          >
+            <option value="ALL">All Companies</option>
+            {availableCompanies.map(c => (
+              <option key={c._id} value={c.name}>{c.name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-slate-500 mb-1">Filed</label>
+          <select
+            value={filterFiled}
+            onChange={(e) => setFilterFiled(e.target.value)}
+            className="w-full border border-slate-300 p-2 rounded text-sm bg-white"
+          >
+            <option value="ALL">All</option>
+            <option value="YES">YES</option>
+            <option value="NO">NO</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-slate-500 mb-1">Technical Status</label>
+          <select
+            value={filterTechnicalStatus}
+            onChange={(e) => setFilterTechnicalStatus(e.target.value)}
+            className="w-full border border-slate-300 p-2 rounded text-sm bg-white"
+          >
+            <option value="ALL">All Status</option>
+            <option value="No Status">No Status</option>
+            <option value="Qualify">Qualify</option>
+            <option value="Disqualify">Disqualify</option>
+            <option value="Canceled Bid">Canceled Bid</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-slate-500 mb-1">Awarded</label>
+          <select
+            value={filterAward}
+            onChange={(e) => setFilterAward(e.target.value)}
+            className="w-full border border-slate-300 p-2 rounded text-sm bg-white"
+          >
+            <option value="ALL">All</option>
+            <option value="YES">YES</option>
+            <option value="NO">NO</option>
+          </select>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <label className="block text-xs font-semibold text-slate-500 mb-1">From Date (Closing Date)</label>
+          <input
+            type="date"
+            value={filterStartDate}
+            onChange={(e) => setFilterStartDate(e.target.value)}
+            className="w-full border border-slate-300 p-2 rounded text-sm bg-white"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-slate-500 mb-1">To Date (Closing Date)</label>
+          <input
+            type="date"
+            value={filterEndDate}
+            onChange={(e) => setFilterEndDate(e.target.value)}
+            className="w-full border border-slate-300 p-2 rounded text-sm bg-white"
+          />
+        </div>
+        <div className="flex items-end">
+          <button
+            onClick={() => {
+              setSearchQuery("");
+              setFilterFiled("ALL");
+              setFilterCompany("ALL");
+              setFilterTechnicalStatus("ALL");
+              setFilterAward("ALL");
+              setFilterStartDate("");
+              setFilterEndDate("");
+            }}
+            className="px-4 py-2 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 w-full md:w-auto"
+          >
+            Clear Filters
+          </button>
+        </div>
+      </div>
+    </div>
 
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-200">
@@ -281,24 +504,33 @@ export function TendersTab({ role }: { role: string }) {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-slate-200">
-            {tenders.map((tender) => (
+            {filteredTenders.map((tender) => (
               <tr key={tender._id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{tender.companies?.join(", ") || "-"}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.tenderNo}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.departmentOrg}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.tenderLastDate}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.filed}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.bidClosingTime}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.location}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.officeDocuments}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.msePurchasePreference}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.category}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.contractPeriodYear}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.manpower}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.emdExemption}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.emdExemption === 'YES' ? tender.emdValue : '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.turnoverExperienceExemption}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.bidValue}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 uppercase">{tender.companies?.join(", ") || "-"}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">{tender.tenderNo}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">{tender.departmentOrg}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">{tender.tenderLastDate}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">
+                  <select
+                    value={tender.filed || "NO"}
+                    onChange={(e) => handleFiledChange(tender._id, e.target.value)}
+                    className="border p-1 rounded bg-slate-50 uppercase"
+                  >
+                    <option value="YES">YES</option>
+                    <option value="NO">NO</option>
+                  </select>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">{tender.bidClosingTime}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">{tender.location}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">{tender.officeDocuments}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">{tender.msePurchasePreference}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">{tender.category}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">{tender.contractPeriodYear}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">{tender.manpower}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">{tender.emdExemption}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">{tender.emdExemption === 'YES' ? tender.emdValue : '-'}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">{tender.turnoverExperienceExemption}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">{tender.bidValue}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                   <select
                     value={tender.technicalStatus || "No Status"}
@@ -323,19 +555,28 @@ export function TendersTab({ role }: { role: string }) {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.createdBy?.username || "Unknown"}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                  <button 
-                    onClick={() => { setTenderToDelete(tender._id); setShowDeleteModal(true); }}
-                    className="text-red-500 hover:text-red-700"
-                    title="Delete Tender"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => handleEditClick(tender)}
+                      className="text-blue-500 hover:text-blue-700"
+                      title="Edit Tender"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    <button 
+                      onClick={() => { setTenderToDelete(tender._id); setShowDeleteModal(true); }}
+                      className="text-red-500 hover:text-red-700"
+                      title="Delete Tender"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
-            {tenders.length === 0 && (
+            {filteredTenders.length === 0 && (
               <tr>
-                <td colSpan={20} className="px-6 py-4 text-center text-sm text-slate-500">No tenders found</td>
+                <td colSpan={20} className="px-6 py-4 text-center text-sm text-slate-500">No tenders found matching filters</td>
               </tr>
             )}
           </tbody>

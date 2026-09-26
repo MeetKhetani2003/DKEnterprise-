@@ -28,11 +28,18 @@ export async function POST(req: Request) {
     }
 
     await dbConnect();
+    
+    try {
+      await User.collection.dropIndex("email_1");
+    } catch (e) {
+      // Index might not exist anymore, ignore
+    }
+
     const { username, password } = await req.json();
 
     const existingUser = await User.findOne({ username });
     if (existingUser) {
-      return NextResponse.json({ message: "Email already exists" }, { status: 400 });
+      return NextResponse.json({ message: "Username already exists" }, { status: 400 });
     }
 
     const hashedPassword = bcrypt.hashSync(password, 10);

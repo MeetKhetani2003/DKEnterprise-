@@ -22,6 +22,8 @@ import { SendEmailForm } from "@/components/SendEmailForm";
 import { Login } from "@/components/admin/Login";
 import { TendersTab } from "@/components/admin/TendersTab";
 import { AdminsTab } from "@/components/admin/AdminsTab";
+import { DashboardTab } from "@/components/admin/DashboardTab";
+import { LayoutDashboard } from "lucide-react";
 
 type CareerApplication = {
   _id: string;
@@ -55,7 +57,7 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState("");
   const [username, setUsername] = useState("");
-  const [activeTab, setActiveTab] = useState<"careers" | "contacts" | "send-email" | "tenders" | "admins">("careers");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "careers" | "contacts" | "send-email" | "tenders" | "admins">("dashboard");
   const [careerApplications, setCareerApplications] = useState<
     CareerApplication[]
   >([]);
@@ -183,6 +185,44 @@ export default function AdminDashboard() {
           <div className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Menu</div>
           
           <button
+            onClick={() => setActiveTab("dashboard")}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
+              activeTab === "dashboard"
+                ? "bg-gradient-to-r from-primary/90 to-primary text-white shadow-lg shadow-primary/25"
+                : "hover:bg-white/5 hover:text-white text-slate-400"
+            }`}
+          >
+            <LayoutDashboard size={18} className={activeTab === "dashboard" ? "text-white" : "text-slate-400"} />
+            Dashboard
+          </button>
+
+          <button
+            onClick={() => setActiveTab("tenders")}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
+              activeTab === "tenders"
+                ? "bg-gradient-to-r from-primary/90 to-primary text-white shadow-lg shadow-primary/25"
+                : "hover:bg-white/5 hover:text-white text-slate-400"
+            }`}
+          >
+            <FileSpreadsheet size={18} className={activeTab === "tenders" ? "text-white" : "text-slate-400"} />
+            Tenders
+          </button>
+
+          {userRole === "superadmin" && (
+            <button
+              onClick={() => setActiveTab("admins")}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
+                activeTab === "admins"
+                  ? "bg-gradient-to-r from-primary/90 to-primary text-white shadow-lg shadow-primary/25"
+                  : "hover:bg-white/5 hover:text-white text-slate-400"
+              }`}
+            >
+              <Users size={18} className={activeTab === "admins" ? "text-white" : "text-slate-400"} />
+              Manage Admins
+            </button>
+          )}
+
+          <button
             onClick={() => setActiveTab("careers")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
               activeTab === "careers"
@@ -212,17 +252,7 @@ export default function AdminDashboard() {
             </span>
           </button>
 
-          <button
-            onClick={() => setActiveTab("tenders")}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
-              activeTab === "tenders"
-                ? "bg-gradient-to-r from-primary/90 to-primary text-white shadow-lg shadow-primary/25"
-                : "hover:bg-white/5 hover:text-white text-slate-400"
-            }`}
-          >
-            <FileSpreadsheet size={18} className={activeTab === "tenders" ? "text-white" : "text-slate-400"} />
-            Tenders
-          </button>
+
 
           <button
             onClick={() => setActiveTab("send-email")}
@@ -236,22 +266,7 @@ export default function AdminDashboard() {
             Send Email
           </button>
 
-          {userRole === "superadmin" && (
-            <>
-              <div className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider mt-8 mb-4">Administration</div>
-              <button
-                onClick={() => setActiveTab("admins")}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
-                  activeTab === "admins"
-                    ? "bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-lg shadow-indigo-500/25"
-                    : "hover:bg-white/5 hover:text-white text-slate-400"
-                }`}
-              >
-                <Users size={18} className={activeTab === "admins" ? "text-white" : "text-slate-400"} />
-                Manage Admins
-              </button>
-            </>
-          )}
+
         </nav>
         <div className="p-6 border-t border-white/5">
            <button 
@@ -304,6 +319,10 @@ export default function AdminDashboard() {
         </header>
 
         <main className="flex-1 overflow-y-auto p-8 scroll-smooth">
+
+        {activeTab === "dashboard" && (
+          <DashboardTab />
+        )}
 
         {activeTab === "admins" && (
           <AdminsTab />

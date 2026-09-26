@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { careerSchema } from "@/lib/form-schemas";
 import { createSubmissionPdf, sendNotificationEmail } from "@/lib/form-utils";
+import dbConnect from "@/lib/mongoose";
+import CareerApplication from "@/lib/models/CareerApplication";
+import mongoose from "mongoose";
 
 export const runtime = "nodejs";
 
@@ -80,6 +83,45 @@ export async function POST(request: Request) {
       console.error("Error sending career notification email:", emailError);
       emailStatus = "Notification email delivery failed (check SMTP settings).";
     }
+
+    let resumeFileId = null;
+
+    if (resume instanceof File) {
+      const conn = await dbConnect();
+      const bucket = new mongoose.mongo.GridFSBucket(conn.connection.db, {
+        bucketName: "resumes",
+      });
+      const uploadStream = bucket.openUploadStream(resume.name, {
+        metadata: { contentType: resume.type || "application/octet-stream" },
+      });
+      const arrayBuffer = await resume.arrayBuffer();
+      uploadStream.end(Buffer.from(arrayBuffer));
+      
+      await new Promise((resolve, reject) => {
+        uploadStream.on('finish', resolve);
+        uploadStream.on('error', reject);
+      });
+      resumeFileId = uploadStream.id.toString();
+    } else {
+      await dbConnect();
+    }
+
+    const applicationDoc = new CareerApplication({
+      salutation: parsed.data.salutation,
+      fullName: parsed.data.fullName,
+      dateOfBirth: parsed.data.dateOfBirth,
+      email: parsed.data.email,
+      phone: parsed.data.phone,
+      gender: parsed.data.gender,
+      currentEmployer: parsed.data.currentEmployer,
+      currentDesignation: parsed.data.currentDesignation,
+      totalWorkExperience: parsed.data.totalWorkExperience,
+      highestQualification: parsed.data.highestQualification,
+      skills: parsed.data.skills,
+      resumeFileId: resumeFileId,
+    });
+
+    await applicationDoc.save();
 
     return NextResponse.json({
       success: true,

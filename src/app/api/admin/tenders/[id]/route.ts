@@ -22,6 +22,13 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
+    if (data.tenderNo && data.tenderNo !== tender.tenderNo) {
+      const existingTender = await Tender.findOne({ tenderNo: data.tenderNo, isDeleted: { $ne: true } });
+      if (existingTender) {
+        return NextResponse.json({ message: "TENDER NUMBER IS ALREADY EXIST" }, { status: 400 });
+      }
+    }
+
     const updatedTender = await Tender.findByIdAndUpdate(params.id, data, { new: true });
     
     return NextResponse.json({ message: "Tender updated successfully", tender: updatedTender });
