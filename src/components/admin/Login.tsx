@@ -44,7 +44,7 @@ export function Login({ onLogin }: { onLogin: (role: string, username: string) =
       
       {/* Background Right - Dark Slanted */}
       <div 
-        className="absolute inset-0 lg:left-[45%] right-0 bg-[#353b40] z-10"
+        className="absolute inset-0 lg:left-[45%] right-0 bg-slate-800 z-10"
         style={{ clipPath: 'polygon(15% 0, 100% 0, 100% 100%, 0 100%)' }}
       >
         <div className="hidden lg:flex items-center justify-end h-full px-16 lg:px-24">
@@ -68,12 +68,12 @@ export function Login({ onLogin }: { onLogin: (role: string, username: string) =
       >
         {/* Gold accent line */}
         <div 
-          className="absolute top-0 bottom-0 left-[44%] w-8 bg-[#b59a6d]"
+          className="absolute top-0 bottom-0 left-[44%] w-8 bg-secondary"
           style={{ clipPath: 'polygon(100% 0, 100% 0, 100% 100%, 0 100%)' }}
         />
         {/* Navy accent line */}
         <div 
-          className="absolute top-0 bottom-0 left-[43%] w-12 bg-[#0B2447]"
+          className="absolute top-0 bottom-0 left-[43%] w-12 bg-primary"
           style={{ clipPath: 'polygon(100% 0, 100% 0, 100% 100%, 0 100%)' }}
         />
       </div>
@@ -81,13 +81,13 @@ export function Login({ onLogin }: { onLogin: (role: string, username: string) =
       {/* Login Card Container */}
       <div className="relative z-20 flex flex-1 items-center justify-center lg:justify-start lg:pl-[20%] p-4">
         
-        <div className="bg-white rounded-xl shadow-2xl p-10 max-w-md w-full border-t-4 border-[#0B2447]">
+        <div className="bg-white rounded-xl shadow-2xl p-10 max-w-md w-full border-t-4 border-primary">
           
           <div className="text-center mb-8">
             <div className="flex justify-center items-center mb-2">
               <Image src="/logos/logo.png" alt="DK Enterprise" width={180} height={56} className="h-14 w-auto object-contain" />
             </div>
-            <h2 className="text-xl font-bold text-[#0B2447] mt-3">Tender Management System</h2>
+            <h2 className="text-xl font-bold text-primary mt-3">Tender Management System</h2>
           </div>
           
           {error && (
@@ -105,7 +105,7 @@ export function Login({ onLogin }: { onLogin: (role: string, username: string) =
                 type="text"
                 placeholder="Username"
                 required
-                className="block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#0B2447] focus:border-[#0B2447]"
+                className="block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
@@ -119,7 +119,7 @@ export function Login({ onLogin }: { onLogin: (role: string, username: string) =
                 type="password"
                 placeholder="Password"
                 required
-                className="block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#0B2447] focus:border-[#0B2447]"
+                className="block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -128,7 +128,7 @@ export function Login({ onLogin }: { onLogin: (role: string, username: string) =
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#0B2447] text-white font-medium rounded-lg py-3 hover:bg-[#11315e] transition duration-200 disabled:opacity-70 mt-2 shadow-md"
+              className="w-full bg-primary text-white font-medium rounded-lg py-3 hover:bg-primary-dark transition duration-200 disabled:opacity-70 mt-2 shadow-md"
             >
               {loading ? "Signing In..." : "Sign In"}
             </button>

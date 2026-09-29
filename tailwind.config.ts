@@ -6,29 +6,39 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#0B2447',
-          dark: '#06162d',
-          light: '#1b3b6b',
-          soft: '#f0f4f8',
+          DEFAULT: '#00B4D8', // Cyan
+          dark: '#0077B6',
+          light: '#90E0EF',
+          soft: '#CAF0F8',
         },
-        gold: {
-          DEFAULT: '#B8955F',
-          dark: '#927546',
-          light: '#d1b687',
+        secondary: {
+          DEFAULT: '#6C6C70', // Grey from logo
+          dark: '#4F4F53',
+          light: '#8E8E92',
         },
         slate: {
-          950: '#020617',
+          50: '#f9fafb',
+          100: '#f3f4f6',
+          200: '#e5e7eb',
+          300: '#d1d5db',
+          400: '#9ca3af',
+          500: '#6b7280',
+          600: '#4b5563',
+          700: '#374151',
+          800: '#1f2937',
+          900: '#111827',
+          950: '#030712',
         },
       },
       boxShadow: {
-        glow: '0 20px 50px rgba(11, 36, 71, 0.18)',
-        soft: '0 20px 40px rgba(15, 23, 42, 0.08)',
+        glow: '0 20px 50px rgba(0, 180, 216, 0.18)',
+        soft: '0 20px 40px rgba(17, 24, 39, 0.08)',
       },
       backgroundImage: {
         'hero-grid':
-          'linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)',
-        'primary-gradient': 'linear-gradient(135deg, #0B2447 0%, #1b3b6b 55%, #06162d 100%)',
-        'surface-gradient': 'linear-gradient(180deg, rgba(240,244,248,0.98) 0%, rgba(255,255,255,1) 100%)',
+          'linear-gradient(rgba(0,180,216,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,180,216,0.08) 1px, transparent 1px)',
+        'primary-gradient': 'linear-gradient(135deg, #0077B6 0%, #00B4D8 55%, #90E0EF 100%)',
+        'surface-gradient': 'linear-gradient(180deg, rgba(202,240,248,0.98) 0%, rgba(255,255,255,1) 100%)',
       },
       fontFamily: {
         sans: ['Inter', 'Geist', 'system-ui', 'sans-serif'],

@@ -23,6 +23,7 @@ import { Login } from "@/components/admin/Login";
 import { TendersTab } from "@/components/admin/TendersTab";
 import { AdminsTab } from "@/components/admin/AdminsTab";
 import { DashboardTab } from "@/components/admin/DashboardTab";
+import { DeletedTendersTab } from "@/components/admin/DeletedTendersTab";
 import { LayoutDashboard } from "lucide-react";
 
 type CareerApplication = {
@@ -57,7 +58,7 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState("");
   const [username, setUsername] = useState("");
-  const [activeTab, setActiveTab] = useState<"dashboard" | "careers" | "contacts" | "send-email" | "tenders" | "admins">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "careers" | "contacts" | "send-email" | "tenders" | "deleted-tenders" | "admins">("dashboard");
   const [careerApplications, setCareerApplications] = useState<
     CareerApplication[]
   >([]);
@@ -146,10 +147,10 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto"></div>
-          <p className="text-slate-500 font-medium tracking-wide">Loading dashboard...</p>
+          <p className="text-zinc-500 font-medium tracking-wide">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -168,31 +169,31 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50/50 overflow-hidden font-sans">
+    <div className="flex h-screen bg-zinc-50/50 overflow-hidden font-sans">
       {/* Sidebar */}
-      <div className="w-72 bg-[#0f172a] text-slate-300 flex flex-col shadow-2xl z-20 relative">
-        <div className="h-20 flex items-center px-8 border-b border-white/5">
+      <div className="w-72 bg-white text-secondary-dark flex flex-col shadow-2xl z-20 relative border-r border-secondary/10">
+        <div className="h-20 flex items-center px-8 border-b border-secondary/10">
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-primary to-blue-400 flex items-center justify-center shadow-lg shadow-primary/20">
-              <User className="h-4 w-4 text-white" />
+            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <User className="h-4 w-4 text-primary" />
             </div>
-            <h1 className="text-xl font-bold text-white tracking-tight">
+            <h1 className="text-xl font-bold text-secondary-dark tracking-tight">
               {userRole === 'superadmin' ? 'Superadmin' : username || 'Admin Portal'}
             </h1>
           </div>
         </div>
         <nav className="flex-1 px-4 py-8 space-y-3 overflow-y-auto">
-          <div className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Menu</div>
+          <div className="px-4 text-xs font-semibold text-secondary uppercase tracking-wider mb-4">Menu</div>
           
           <button
             onClick={() => setActiveTab("dashboard")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
               activeTab === "dashboard"
-                ? "bg-gradient-to-r from-primary/90 to-primary text-white shadow-lg shadow-primary/25"
-                : "hover:bg-white/5 hover:text-white text-slate-400"
+                ? "bg-primary text-white shadow-lg shadow-primary/25"
+                : "hover:bg-primary/5 hover:text-primary text-secondary"
             }`}
           >
-            <LayoutDashboard size={18} className={activeTab === "dashboard" ? "text-white" : "text-slate-400"} />
+            <LayoutDashboard size={18} className={activeTab === "dashboard" ? "text-white" : "text-secondary"} />
             Dashboard
           </button>
 
@@ -200,12 +201,24 @@ export default function AdminDashboard() {
             onClick={() => setActiveTab("tenders")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
               activeTab === "tenders"
-                ? "bg-gradient-to-r from-primary/90 to-primary text-white shadow-lg shadow-primary/25"
-                : "hover:bg-white/5 hover:text-white text-slate-400"
+                ? "bg-primary text-white shadow-lg shadow-primary/25"
+                : "hover:bg-primary/5 hover:text-primary text-secondary"
             }`}
           >
-            <FileSpreadsheet size={18} className={activeTab === "tenders" ? "text-white" : "text-slate-400"} />
+            <FileSpreadsheet size={18} className={activeTab === "tenders" ? "text-white" : "text-secondary"} />
             Tenders
+          </button>
+
+          <button
+            onClick={() => setActiveTab("deleted-tenders")}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
+              activeTab === "deleted-tenders"
+                ? "bg-primary text-white shadow-lg shadow-primary/25"
+                : "hover:bg-primary/5 hover:text-primary text-secondary"
+            }`}
+          >
+            <FileSpreadsheet size={18} className={activeTab === "deleted-tenders" ? "text-white" : "text-secondary"} />
+            Deleted Tenders
           </button>
 
           {userRole === "superadmin" && (
@@ -213,11 +226,11 @@ export default function AdminDashboard() {
               onClick={() => setActiveTab("admins")}
               className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
                 activeTab === "admins"
-                  ? "bg-gradient-to-r from-primary/90 to-primary text-white shadow-lg shadow-primary/25"
-                  : "hover:bg-white/5 hover:text-white text-slate-400"
+                  ? "bg-primary text-white shadow-lg shadow-primary/25"
+                  : "hover:bg-primary/5 hover:text-primary text-secondary"
               }`}
             >
-              <Users size={18} className={activeTab === "admins" ? "text-white" : "text-slate-400"} />
+              <Users size={18} className={activeTab === "admins" ? "text-white" : "text-secondary"} />
               Manage Admins
             </button>
           )}
@@ -226,13 +239,13 @@ export default function AdminDashboard() {
             onClick={() => setActiveTab("careers")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
               activeTab === "careers"
-                ? "bg-gradient-to-r from-primary/90 to-primary text-white shadow-lg shadow-primary/25"
-                : "hover:bg-white/5 hover:text-white text-slate-400"
+                ? "bg-primary text-white shadow-lg shadow-primary/25"
+                : "hover:bg-primary/5 hover:text-primary text-secondary"
             }`}
           >
-            <Briefcase size={18} className={activeTab === "careers" ? "text-white" : "text-slate-400"} />
+            <Briefcase size={18} className={activeTab === "careers" ? "text-white" : "text-secondary"} />
             Career Applications
-            <span className={`ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-bold ${activeTab === "careers" ? "bg-white/20 text-white" : "bg-slate-800 text-slate-400"}`}>
+            <span className={`ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-bold ${activeTab === "careers" ? "bg-white/20 text-white" : "bg-secondary/10 text-secondary"}`}>
               {careerApplications.length}
             </span>
           </button>
@@ -241,13 +254,13 @@ export default function AdminDashboard() {
             onClick={() => setActiveTab("contacts")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
               activeTab === "contacts"
-                ? "bg-gradient-to-r from-primary/90 to-primary text-white shadow-lg shadow-primary/25"
-                : "hover:bg-white/5 hover:text-white text-slate-400"
+                ? "bg-primary text-white shadow-lg shadow-primary/25"
+                : "hover:bg-primary/5 hover:text-primary text-secondary"
             }`}
           >
-            <MessageSquare size={18} className={activeTab === "contacts" ? "text-white" : "text-slate-400"} />
+            <MessageSquare size={18} className={activeTab === "contacts" ? "text-white" : "text-secondary"} />
             Contact Enquiries
-            <span className={`ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-bold ${activeTab === "contacts" ? "bg-white/20 text-white" : "bg-slate-800 text-slate-400"}`}>
+            <span className={`ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-bold ${activeTab === "contacts" ? "bg-white/20 text-white" : "bg-secondary/10 text-secondary"}`}>
               {contactEnquiries.length}
             </span>
           </button>
@@ -258,20 +271,20 @@ export default function AdminDashboard() {
             onClick={() => setActiveTab("send-email")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
               activeTab === "send-email"
-                ? "bg-gradient-to-r from-primary/90 to-primary text-white shadow-lg shadow-primary/25"
-                : "hover:bg-white/5 hover:text-white text-slate-400"
+                ? "bg-primary text-white shadow-lg shadow-primary/25"
+                : "hover:bg-primary/5 hover:text-primary text-secondary"
             }`}
           >
-            <Send size={18} className={activeTab === "send-email" ? "text-white" : "text-slate-400"} />
+            <Send size={18} className={activeTab === "send-email" ? "text-white" : "text-secondary"} />
             Send Email
           </button>
 
 
         </nav>
-        <div className="p-6 border-t border-white/5">
+        <div className="p-6 border-t border-secondary/10">
            <button 
              onClick={() => window.location.reload()} 
-             className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-slate-400 bg-white/5 rounded-xl hover:bg-white/10 hover:text-white transition-all duration-300"
+             className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-secondary hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-300"
            >
              <LogOut size={16} />
              Log Out
@@ -281,33 +294,33 @@ export default function AdminDashboard() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
-        <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-10">
+        <header className="bg-white/80 backdrop-blur-xl border-b border-zinc-200/60 sticky top-0 z-10">
           <div className="px-8 h-20 flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-slate-800 capitalize tracking-tight flex items-center gap-2">
+              <h2 className="text-2xl font-bold text-zinc-800 capitalize tracking-tight flex items-center gap-2">
                 {activeTab.replace("-", " ")}
               </h2>
-              <p className="text-sm text-slate-500 mt-1 font-medium">Manage and view your {activeTab.replace("-", " ")}</p>
+              <p className="text-sm text-zinc-500 mt-1 font-medium">Manage and view your {activeTab.replace("-", " ")}</p>
             </div>
             <div className="flex items-center gap-4">
-              <div className="hidden sm:flex items-center gap-6 bg-slate-50/80 px-5 py-2.5 rounded-2xl border border-slate-100">
+              <div className="hidden sm:flex items-center gap-6 bg-zinc-50/80 px-5 py-2.5 rounded-2xl border border-zinc-100">
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
                     <Briefcase size={16} />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Careers</span>
-                    <span className="text-sm font-bold text-slate-700">{careerApplications.length}</span>
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Careers</span>
+                    <span className="text-sm font-bold text-zinc-700">{careerApplications.length}</span>
                   </div>
                 </div>
-                <div className="h-8 w-px bg-slate-200"></div>
+                <div className="h-8 w-px bg-zinc-200"></div>
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
                     <MessageSquare size={16} />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Enquiries</span>
-                    <span className="text-sm font-bold text-slate-700">{contactEnquiries.length}</span>
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Enquiries</span>
+                    <span className="text-sm font-bold text-zinc-700">{contactEnquiries.length}</span>
                   </div>
                 </div>
               </div>
@@ -332,37 +345,41 @@ export default function AdminDashboard() {
           <TendersTab role={userRole} />
         )}
 
+        {activeTab === "deleted-tenders" && (
+          <DeletedTendersTab role={userRole} />
+        )}
+
         {activeTab === "careers" && (
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200">
-              <h2 className="text-lg font-semibold text-slate-900">
+          <div className="bg-white rounded-lg shadow-sm border border-zinc-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-zinc-200">
+              <h2 className="text-lg font-semibold text-zinc-900">
                 Career Applications
               </h2>
             </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-slate-50">
+              <table className="min-w-full divide-y divide-zinc-200">
+                <thead className="bg-zinc-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
                       Applicant
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
                       Contact
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
                       Position
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
                       Submitted
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-slate-200">
+                <tbody className="bg-white divide-y divide-zinc-200">
                   {careerApplications.map((app) => (
-                    <tr key={app._id} className="hover:bg-slate-50">
+                    <tr key={app._id} className="hover:bg-zinc-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10">
@@ -371,33 +388,33 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-slate-900">
+                            <div className="text-sm font-medium text-zinc-900">
                               {app.salutation ? `${app.salutation} ` : ""}
                               {app.fullName}
                             </div>
-                            <div className="text-sm text-slate-500">
+                            <div className="text-sm text-zinc-500">
                               {app.highestQualification}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-slate-900">
+                        <div className="text-sm text-zinc-900">
                           {app.email}
                         </div>
-                        <div className="text-sm text-slate-500">
+                        <div className="text-sm text-zinc-500">
                           {app.phone}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-slate-900">
+                        <div className="text-sm text-zinc-900">
                           {app.currentDesignation}
                         </div>
-                        <div className="text-sm text-slate-500">
+                        <div className="text-sm text-zinc-500">
                           {app.totalWorkExperience} experience
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-500">
                         {formatDate(app.submittedAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -425,7 +442,7 @@ export default function AdminDashboard() {
                               onClick={() =>
                                 downloadFile(app.resumeFileId!, "resumes")
                               }
-                              className="text-slate-600 hover:text-slate-800"
+                              className="text-zinc-600 hover:text-zinc-800"
                               title="Download Resume"
                             >
                               <Download className="h-4 w-4" />
@@ -442,36 +459,36 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === "contacts" && (
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200">
-              <h2 className="text-lg font-semibold text-slate-900">
+          <div className="bg-white rounded-lg shadow-sm border border-zinc-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-zinc-200">
+              <h2 className="text-lg font-semibold text-zinc-900">
                 Contact Enquiries
               </h2>
             </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-slate-50">
+              <table className="min-w-full divide-y divide-zinc-200">
+                <thead className="bg-zinc-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
                       Contact
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
                       Subject
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
                       Message
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
                       Submitted
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-slate-200">
+                <tbody className="bg-white divide-y divide-zinc-200">
                   {contactEnquiries.map((enquiry) => (
-                    <tr key={enquiry._id} className="hover:bg-slate-50">
+                    <tr key={enquiry._id} className="hover:bg-zinc-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10">
@@ -480,26 +497,26 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-slate-900">
+                            <div className="text-sm font-medium text-zinc-900">
                               {enquiry.name}
                             </div>
-                            <div className="text-sm text-slate-500">
+                            <div className="text-sm text-zinc-500">
                               {enquiry.email}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-slate-900">
+                        <div className="text-sm font-medium text-zinc-900">
                           {enquiry.subject}
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-slate-900 max-w-xs truncate">
+                        <div className="text-sm text-zinc-900 max-w-xs truncate">
                           {enquiry.message}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-500">
                         {formatDate(enquiry.submittedAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -530,7 +547,7 @@ export default function AdminDashboard() {
                                   "attachments",
                                 )
                               }
-                              className="text-slate-600 hover:text-slate-800"
+                              className="text-zinc-600 hover:text-zinc-800"
                               title="Download Attachment"
                             >
                               <Download className="h-4 w-4" />
@@ -556,13 +573,13 @@ export default function AdminDashboard() {
         {selectedApplication && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900">
+              <div className="px-6 py-4 border-b border-zinc-200 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-zinc-900">
                   Career Application Details
                 </h3>
                 <button
                   onClick={() => setSelectedApplication(null)}
-                  className="text-slate-400 hover:text-slate-600"
+                  className="text-zinc-400 hover:text-zinc-600"
                 >
                   ✕
                 </button>
@@ -570,10 +587,10 @@ export default function AdminDashboard() {
               <div className="px-6 py-4 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-zinc-700">
                       Full Name
                     </label>
-                    <p className="mt-1 text-sm text-slate-900">
+                    <p className="mt-1 text-sm text-zinc-900">
                       {selectedApplication.salutation
                         ? `${selectedApplication.salutation} `
                         : ""}
@@ -581,21 +598,21 @@ export default function AdminDashboard() {
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-zinc-700">
                       Date of Birth
                     </label>
-                    <p className="mt-1 text-sm text-slate-900">
+                    <p className="mt-1 text-sm text-zinc-900">
                       {new Date(
                         selectedApplication.dateOfBirth,
                       ).toLocaleDateString()}
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-zinc-700">
                       Email
                     </label>
                     <div className="mt-1 flex items-center gap-2">
-                      <p className="text-sm text-slate-900">
+                      <p className="text-sm text-zinc-900">
                         {selectedApplication.email}
                       </p>
                       <button
@@ -612,80 +629,80 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-zinc-700">
                       Phone
                     </label>
-                    <p className="mt-1 text-sm text-slate-900">
+                    <p className="mt-1 text-sm text-zinc-900">
                       {selectedApplication.phone}
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-zinc-700">
                       Gender
                     </label>
-                    <p className="mt-1 text-sm text-slate-900">
+                    <p className="mt-1 text-sm text-zinc-900">
                       {selectedApplication.gender}
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-zinc-700">
                       Current Employer
                     </label>
-                    <p className="mt-1 text-sm text-slate-900">
+                    <p className="mt-1 text-sm text-zinc-900">
                       {selectedApplication.currentEmployer || "N/A"}
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-zinc-700">
                       Current Designation
                     </label>
-                    <p className="mt-1 text-sm text-slate-900">
+                    <p className="mt-1 text-sm text-zinc-900">
                       {selectedApplication.currentDesignation}
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-zinc-700">
                       Total Work Experience
                     </label>
-                    <p className="mt-1 text-sm text-slate-900">
+                    <p className="mt-1 text-sm text-zinc-900">
                       {selectedApplication.totalWorkExperience}
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-zinc-700">
                       Highest Qualification
                     </label>
-                    <p className="mt-1 text-sm text-slate-900">
+                    <p className="mt-1 text-sm text-zinc-900">
                       {selectedApplication.highestQualification}
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-zinc-700">
                       Submitted At
                     </label>
-                    <p className="mt-1 text-sm text-slate-900">
+                    <p className="mt-1 text-sm text-zinc-900">
                       {formatDate(selectedApplication.submittedAt)}
                     </p>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">
+                  <label className="block text-sm font-medium text-zinc-700">
                     Skills
                   </label>
-                  <p className="mt-1 text-sm text-slate-900">
+                  <p className="mt-1 text-sm text-zinc-900">
                     {selectedApplication.skills}
                   </p>
                 </div>
                 {selectedApplication.resumeFileId && (
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-zinc-700">
                       Resume
                     </label>
                     <button
                       onClick={() =>
                         downloadFile(selectedApplication.resumeFileId!, "resumes")
                       }
-                      className="mt-1 inline-flex items-center px-3 py-1 border border-slate-300 rounded-md text-sm font-medium text-slate-700 bg-white hover:bg-slate-50"
+                      className="mt-1 inline-flex items-center px-3 py-1 border border-zinc-300 rounded-md text-sm font-medium text-zinc-700 bg-white hover:bg-zinc-50"
                     >
                       <Download className="h-4 w-4 mr-2" />
                       Download Resume
@@ -701,13 +718,13 @@ export default function AdminDashboard() {
         {selectedEnquiry && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900">
+              <div className="px-6 py-4 border-b border-zinc-200 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-zinc-900">
                   Contact Enquiry Details
                 </h3>
                 <button
                   onClick={() => setSelectedEnquiry(null)}
-                  className="text-slate-400 hover:text-slate-600"
+                  className="text-zinc-400 hover:text-zinc-600"
                 >
                   ✕
                 </button>
@@ -715,19 +732,19 @@ export default function AdminDashboard() {
               <div className="px-6 py-4 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-zinc-700">
                       Name
                     </label>
-                    <p className="mt-1 text-sm text-slate-900">
+                    <p className="mt-1 text-sm text-zinc-900">
                       {selectedEnquiry.name}
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-zinc-700">
                       Email
                     </label>
                     <div className="mt-1 flex items-center gap-2">
-                      <p className="text-sm text-slate-900">
+                      <p className="text-sm text-zinc-900">
                         {selectedEnquiry.email}
                       </p>
                       <button
@@ -744,41 +761,41 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-zinc-700">
                       Phone
                     </label>
-                    <p className="mt-1 text-sm text-slate-900">
+                    <p className="mt-1 text-sm text-zinc-900">
                       {selectedEnquiry.phone}
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-zinc-700">
                       Subject
                     </label>
-                    <p className="mt-1 text-sm text-slate-900">
+                    <p className="mt-1 text-sm text-zinc-900">
                       {selectedEnquiry.subject}
                     </p>
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-zinc-700">
                       Submitted At
                     </label>
-                    <p className="mt-1 text-sm text-slate-900">
+                    <p className="mt-1 text-sm text-zinc-900">
                       {formatDate(selectedEnquiry.submittedAt)}
                     </p>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">
+                  <label className="block text-sm font-medium text-zinc-700">
                     Message
                   </label>
-                  <p className="mt-1 text-sm text-slate-900 whitespace-pre-wrap">
+                  <p className="mt-1 text-sm text-zinc-900 whitespace-pre-wrap">
                     {selectedEnquiry.message}
                   </p>
                 </div>
                 {selectedEnquiry.attachmentFileId && (
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-zinc-700">
                       Attachment
                     </label>
                     <button
@@ -788,7 +805,7 @@ export default function AdminDashboard() {
                           "attachments",
                         )
                       }
-                      className="mt-1 inline-flex items-center px-3 py-1 border border-slate-300 rounded-md text-sm font-medium text-slate-700 bg-white hover:bg-slate-50"
+                      className="mt-1 inline-flex items-center px-3 py-1 border border-zinc-300 rounded-md text-sm font-medium text-zinc-700 bg-white hover:bg-zinc-50"
                     >
                       <Download className="h-4 w-4 mr-2" />
                       Download Attachment
@@ -803,15 +820,15 @@ export default function AdminDashboard() {
         {/* Quick Email Reply Modal */}
         {showReplyModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[60] backdrop-blur-sm transition-all duration-350">
-            <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100">
-              <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-zinc-100">
+              <div className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
                   <Mail className="h-5 w-5 text-primary" />
                   Compose Reply
                 </h3>
                 <button
                   onClick={() => setShowReplyModal(false)}
-                  className="rounded-full bg-slate-100 p-2 text-slate-500 hover:text-slate-800 transition hover:bg-slate-200"
+                  className="rounded-full bg-zinc-100 p-2 text-zinc-500 hover:text-zinc-800 transition hover:bg-zinc-200"
                 >
                   ✕
                 </button>
