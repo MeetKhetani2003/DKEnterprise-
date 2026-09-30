@@ -12,7 +12,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     }
 
     await dbConnect();
-    const { username, password } = await req.json();
+    const { username, password, hasEInvoiceAccess } = await req.json();
 
     const targetUser = await User.findById(params.id);
     if (!targetUser) {
@@ -29,6 +29,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
     if (password) {
       targetUser.password = bcrypt.hashSync(password, 10);
+    }
+
+    if (hasEInvoiceAccess !== undefined) {
+      targetUser.hasEInvoiceAccess = hasEInvoiceAccess;
     }
 
     await targetUser.save();

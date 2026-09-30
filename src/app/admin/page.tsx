@@ -24,6 +24,7 @@ import { TendersTab } from "@/components/admin/TendersTab";
 import { AdminsTab } from "@/components/admin/AdminsTab";
 import { DashboardTab } from "@/components/admin/DashboardTab";
 import { DeletedTendersTab } from "@/components/admin/DeletedTendersTab";
+import { EInvoiceTab } from "@/components/admin/EInvoiceTab";
 import { LayoutDashboard } from "lucide-react";
 
 type CareerApplication = {
@@ -58,7 +59,8 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState("");
   const [username, setUsername] = useState("");
-  const [activeTab, setActiveTab] = useState<"dashboard" | "careers" | "contacts" | "send-email" | "tenders" | "deleted-tenders" | "admins">("dashboard");
+  const [hasEInvoiceAccess, setHasEInvoiceAccess] = useState(false);
+  const [activeTab, setActiveTab] = useState<"dashboard" | "careers" | "contacts" | "send-email" | "tenders" | "deleted-tenders" | "admins" | "e-invoice">("dashboard");
   const [careerApplications, setCareerApplications] = useState<
     CareerApplication[]
   >([]);
@@ -159,10 +161,11 @@ export default function AdminDashboard() {
   if (!isAuthenticated) {
     return (
       <Login
-        onLogin={(role, uname) => {
+        onLogin={(role, uname, einvoiceAccess) => {
           setIsAuthenticated(true);
           setUserRole(role);
           setUsername(uname);
+          setHasEInvoiceAccess(einvoiceAccess);
         }}
       />
     );
@@ -222,16 +225,43 @@ export default function AdminDashboard() {
           </button>
 
           {userRole === "superadmin" && (
+            <>
+              <button
+                onClick={() => setActiveTab("admins")}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
+                  activeTab === "admins"
+                    ? "bg-primary text-white shadow-lg shadow-primary/25"
+                    : "hover:bg-primary/5 hover:text-primary text-secondary"
+                }`}
+              >
+                <Users size={18} className={activeTab === "admins" ? "text-white" : "text-secondary"} />
+                Manage Admins
+              </button>
+              <button
+                onClick={() => setActiveTab("e-invoice")}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
+                  activeTab === "e-invoice"
+                    ? "bg-primary text-white shadow-lg shadow-primary/25"
+                    : "hover:bg-primary/5 hover:text-primary text-secondary"
+                }`}
+              >
+                <FileText size={18} className={activeTab === "e-invoice" ? "text-white" : "text-secondary"} />
+                E-Invoice Software
+              </button>
+            </>
+          )}
+
+          {(userRole === "superadmin" || hasEInvoiceAccess) && userRole !== "superadmin" && (
             <button
-              onClick={() => setActiveTab("admins")}
+              onClick={() => setActiveTab("e-invoice")}
               className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
-                activeTab === "admins"
+                activeTab === "e-invoice"
                   ? "bg-primary text-white shadow-lg shadow-primary/25"
                   : "hover:bg-primary/5 hover:text-primary text-secondary"
               }`}
             >
-              <Users size={18} className={activeTab === "admins" ? "text-white" : "text-secondary"} />
-              Manage Admins
+              <FileText size={18} className={activeTab === "e-invoice" ? "text-white" : "text-secondary"} />
+              E-Invoice Software
             </button>
           )}
 
@@ -339,6 +369,10 @@ export default function AdminDashboard() {
 
         {activeTab === "admins" && (
           <AdminsTab />
+        )}
+
+        {activeTab === "e-invoice" && (
+          <EInvoiceTab />
         )}
 
         {activeTab === "tenders" && (

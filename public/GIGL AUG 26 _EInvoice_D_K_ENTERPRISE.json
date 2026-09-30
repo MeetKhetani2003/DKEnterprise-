@@ -1,0 +1,167 @@
+[
+    {
+        "Version": "1.1",
+        "TranDtls": {
+            "TaxSch": "GST",
+            "SupTyp": "B2B"
+        },
+        "DocDtls": {
+            "Typ": "INV",
+            "No": "GIGL/PUN/021",
+            "Dt": "09/09/2026"
+        },
+        "SellerDtls": {
+            "Gstin": "24BQRPV1727M1Z4",
+            "LglNm": "D K ENTERPRISE",
+            "Addr1": "Office No- 409,Vyanktesh Vogue,150 Feet Ring Road,Indira Circle",
+            "Loc": "Rajkot",
+            "Pin": 360005,
+            "Stcd": "24"
+        },
+        "BuyerDtls": {
+            "Gstin": "03AAECG4433G1Z1",
+            "LglNm": "GSPL INDIA GASNET LTD",
+            "Pos": "03",
+            "Addr1": "393, Garden Enclave,khankot Garden colony,GT Road by pass,",
+            "Loc": "Amritsar",
+            "Pin": 143001,
+            "Stcd": "03"
+        },
+        "ItemList": [
+            {
+                "SlNo": "1",
+                "PrdDesc": "HOUSEKEEPING SERVICES AT AMRITSAR & BHATINDA BASE",
+                "IsServc": "Y",
+                "HsnCd": "998533",
+                "Qty": 1,
+                "Unit": "OTH",
+                "UnitPrice": 396722.0,
+                "TotAmt": 396722.0,
+                "AssAmt": 396722.0,
+                "GstRt": 18,
+                "IgstAmt": 71409.96,
+                "CgstAmt": 0.0,
+                "SgstAmt": 0.0,
+                "TotItemVal": 468132.0
+            }
+        ],
+        "ValDtls": {
+            "AssVal": 396722.0,
+            "CgstVal": 0.0,
+            "SgstVal": 0.0,
+            "IgstVal": 71409.96,
+            "RndOffAmt": 0.04,
+            "TotInvVal": 468132.0
+        }
+    },
+    {
+        "Version": "1.1",
+        "TranDtls": {
+            "TaxSch": "GST",
+            "SupTyp": "B2B"
+        },
+        "DocDtls": {
+            "Typ": "INV",
+            "No": "GIGL/HAR/021",
+            "Dt": "09/09/2026"
+        },
+        "SellerDtls": {
+            "Gstin": "24BQRPV1727M1Z4",
+            "LglNm": "D K ENTERPRISE",
+            "Addr1": "Office No- 409,Vyanktesh Vogue,150 Feet Ring Road,Indira Circle",
+            "Loc": "Rajkot",
+            "Pin": 360005,
+            "Stcd": "24"
+        },
+        "BuyerDtls": {
+            "Gstin": "06AAECG4433G1ZV",
+            "LglNm": "GSPL INDIA GASNET LTD",
+            "Pos": "06",
+            "Addr1": "SURVEY NO. 44/21/1, 44/21/2,44/22/1, & 50/1/1,\nVILLAGE KAHANI 7.5, ROHTAK,",
+            "Loc": "HARYANA",
+            "Pin": 124303,
+            "Stcd": "06"
+        },
+        "ItemList": [
+            {
+                "SlNo": "1",
+                "PrdDesc": "HOUSEKEEPING SERVICES AT ROHTAK & HISSAR",
+                "IsServc": "Y",
+                "HsnCd": "998533",
+                "Qty": 1,
+                "Unit": "OTH",
+                "UnitPrice": 375261.0,
+                "TotAmt": 375261.0,
+                "AssAmt": 375261.0,
+                "GstRt": 18,
+                "IgstAmt": 67546.98,
+                "CgstAmt": 0.0,
+                "SgstAmt": 0.0,
+                "TotItemVal": 442808.0
+            }
+        ],
+        "ValDtls": {
+            "AssVal": 375261.0,
+            "CgstVal": 0.0,
+            "SgstVal": 0.0,
+            "IgstVal": 67546.98,
+            "RndOffAmt": 0.02,
+            "TotInvVal": 442808.0
+        }
+    },
+    {
+        "Version": "1.1",
+        "TranDtls": {
+            "TaxSch": "GST",
+            "SupTyp": "B2B"
+        },
+        "DocDtls": {
+            "Typ": "INV",
+            "No": "GIGL/RAJ/021",
+            "Dt": "09/09/2026"
+        },
+        "SellerDtls": {
+            "Gstin": "24BQRPV1727M1Z4",
+            "LglNm": "D K ENTERPRISE",
+            "Addr1": "Office No- 409,Vyanktesh Vogue,150 Feet Ring Road,Indira Circle",
+            "Loc": "Rajkot",
+            "Pin": 360005,
+            "Stcd": "24"
+        },
+        "BuyerDtls": {
+            "Gstin": "08AAECG4433G1ZR",
+            "LglNm": "GSPL INDIA GASNET LTD",
+            "Pos": "08",
+            "Addr1": "MBPL SV 4014,KHSARA NO. 303/25,\nTEHSHIL PHULERA,\nBanshipura,",
+            "Loc": "Rajasthan",
+            "Pin": 303328,
+            "Stcd": "08"
+        },
+        "ItemList": [
+            {
+                "SlNo": "1",
+                "PrdDesc": "HOUSEKEEPING SERVICES AT RAJASTHAN IP\n05 LOCATION",
+                "IsServc": "Y",
+                "HsnCd": "998533",
+                "Qty": 1,
+                "Unit": "OTH",
+                "UnitPrice": 15622.0,
+                "TotAmt": 15622.0,
+                "AssAmt": 15622.0,
+                "GstRt": 18,
+                "IgstAmt": 2811.96,
+                "CgstAmt": 0.0,
+                "SgstAmt": 0.0,
+                "TotItemVal": 18434.0
+            }
+        ],
+        "ValDtls": {
+            "AssVal": 15622.0,
+            "CgstVal": 0.0,
+            "SgstVal": 0.0,
+            "IgstVal": 2811.96,
+            "RndOffAmt": 0.04,
+            "TotInvVal": 18434.0
+        }
+    }
+]

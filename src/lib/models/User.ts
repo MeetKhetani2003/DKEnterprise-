@@ -4,6 +4,7 @@ export interface IUser extends Document {
   username: string;
   password?: string;
   role: string;
+  hasEInvoiceAccess?: boolean;
   createdAt: Date;
 }
 
@@ -21,6 +22,10 @@ const UserSchema = new mongoose.Schema<IUser>({
     type: String,
     enum: ["superadmin", "admin"],
     default: "admin",
+  },
+  hasEInvoiceAccess: {
+    type: Boolean,
+    default: false,
   },
   createdAt: {
     type: Date,

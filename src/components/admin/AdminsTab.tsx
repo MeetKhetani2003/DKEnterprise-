@@ -12,6 +12,7 @@ export function AdminsTab() {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
+    hasEInvoiceAccess: false,
   });
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -34,7 +35,8 @@ export function AdminsTab() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    setFormData({ ...formData, [e.target.name]: value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,7 +62,7 @@ export function AdminsTab() {
         setShowForm(false);
         setEditingId(null);
         fetchAdmins();
-        setFormData({ username: "", password: "" });
+        setFormData({ username: "", password: "", hasEInvoiceAccess: false });
       } else {
         const data = await res.json();
         setError(data.message || (editingId ? "Failed to update admin" : "Failed to create admin"));
@@ -71,7 +73,7 @@ export function AdminsTab() {
   };
 
   const handleEdit = (admin: any) => {
-    setFormData({ username: admin.username, password: "" });
+    setFormData({ username: admin.username, password: "", hasEInvoiceAccess: admin.hasEInvoiceAccess || false });
     setEditingId(admin._id);
     setShowForm(true);
   };
@@ -102,7 +104,7 @@ export function AdminsTab() {
         <button
           onClick={() => {
             setEditingId(null);
-            setFormData({ username: "", password: "" });
+            setFormData({ username: "", password: "", hasEInvoiceAccess: false });
             setShowForm(true);
           }}
           className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-md hover:bg-slate-800"
@@ -129,7 +131,19 @@ export function AdminsTab() {
               <label className="block text-sm font-medium mb-1">Password {editingId && <span className="text-slate-400 font-normal text-xs">(leave blank to keep current)</span>}</label>
               <input type="text" required={!editingId} name="password" value={formData.password} onChange={handleChange} className="w-full border p-2 rounded" />
             </div>
-            <button type="submit" className="bg-primary text-white px-6 py-2 rounded hover:bg-primary/90 h-[42px]">
+            <div className="flex-1 flex flex-col justify-center mb-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  name="hasEInvoiceAccess" 
+                  checked={formData.hasEInvoiceAccess} 
+                  onChange={handleChange} 
+                  className="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary"
+                />
+                <span className="text-sm font-medium">E-Invoice Access</span>
+              </label>
+            </div>
+            <button type="submit" className="bg-primary text-white px-6 py-2 rounded hover:bg-primary/90 h-[42px] mb-2">
               {editingId ? "Update Admin" : "Create Admin"}
             </button>
           </form>
@@ -141,6 +155,7 @@ export function AdminsTab() {
           <thead className="bg-slate-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Username</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">E-Invoice Access</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Created At</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
             </tr>
@@ -149,6 +164,11 @@ export function AdminsTab() {
             {admins.map((admin) => (
               <tr key={admin._id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{admin.username}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${admin.hasEInvoiceAccess ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                    {admin.hasEInvoiceAccess ? 'Yes' : 'No'}
+                  </span>
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{new Date(admin.createdAt).toLocaleDateString()}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button onClick={() => handleEdit(admin)} className="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
@@ -158,7 +178,7 @@ export function AdminsTab() {
             ))}
             {admins.length === 0 && (
               <tr>
-                <td colSpan={3} className="px-6 py-4 text-center text-sm text-slate-500">No admins found</td>
+                <td colSpan={4} className="px-6 py-4 text-center text-sm text-slate-500">No admins found</td>
               </tr>
             )}
           </tbody>

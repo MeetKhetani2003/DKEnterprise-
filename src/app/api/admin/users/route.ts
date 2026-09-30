@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       // Index might not exist anymore, ignore
     }
 
-    const { username, password } = await req.json();
+    const { username, password, hasEInvoiceAccess } = await req.json();
 
     const existingUser = await User.findOne({ username });
     if (existingUser) {
@@ -47,6 +47,7 @@ export async function POST(req: Request) {
       username,
       password: hashedPassword,
       role: "admin",
+      hasEInvoiceAccess: hasEInvoiceAccess || false,
     });
 
     await newUser.save();
