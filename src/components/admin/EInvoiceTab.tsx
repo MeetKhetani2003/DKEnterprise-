@@ -21,6 +21,7 @@ type Buyer = {
   pinCode: string;
   address: string;
   location: string;
+  companyId?: string;
 };
 
 type InvoiceItem = {
@@ -101,6 +102,11 @@ export function EInvoiceTab() {
   }, [invoices]);
 
   const [selectedInvoice, setSelectedInvoice] = useState<SavedInvoice | null>(null);
+
+  // History Filters
+  const [historyFilterMonth, setHistoryFilterMonth] = useState("");
+  const [historyFilterDate, setHistoryFilterDate] = useState("");
+  const [historyFilterBuyer, setHistoryFilterBuyer] = useState("ALL");
 
   // Invoice Form State
   const [selectedCompanyId, setSelectedCompanyId] = useState("test-seller-1");
@@ -260,8 +266,44 @@ export function EInvoiceTab() {
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
+    
+    // Reset form and switch to history tab
+    setSelectedCompanyId("");
+    setSelectedBuyerId("");
+    setInvoiceNo("");
+    setInvoiceDate(new Date().toISOString().split('T')[0]);
+    setItems([{ description: "", hsnCode: "", supplyType: "Services", taxableAmount: 0 }]);
+    setActiveSubTab("history");
   };
 
+  // Filtered History
+  const filteredInvoices = invoices.filter(inv => {
+    let matchBuyer = true;
+    let matchMonth = true;
+    let matchDate = true;
+
+    if (historyFilterBuyer !== "ALL") {
+      matchBuyer = inv.buyerName === historyFilterBuyer;
+    }
+    
+    if (historyFilterMonth) {
+      const [year, month] = historyFilterMonth.split("-");
+      const invParts = inv.date.split("/"); // [DD, MM, YYYY]
+      if (invParts.length === 3) {
+        matchMonth = invParts[1] === month && invParts[2] === year;
+      }
+    }
+
+    if (historyFilterDate) {
+      const [year, month, day] = historyFilterDate.split("-");
+      const invParts = inv.date.split("/");
+      if (invParts.length === 3) {
+        matchDate = invParts[0] === day && invParts[1] === month && invParts[2] === year;
+      }
+    }
+
+    return matchBuyer && matchMonth && matchDate;
+  });
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden min-h-[600px] flex flex-col">
@@ -481,6 +523,7 @@ export function EInvoiceTab() {
             title="Buyer"
             entities={buyers}
             setEntities={setBuyers}
+            companies={companies}
           />
         )}
 
@@ -490,8 +533,56 @@ export function EInvoiceTab() {
               <List size={20} className="text-primary" />
               Generated Invoices History
             </h3>
+
+            <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-200 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-500 mb-1">Filter by Month</label>
+                  <input 
+                    type="month" 
+                    value={historyFilterMonth}
+                    onChange={(e) => setHistoryFilterMonth(e.target.value)}
+                    className="w-full border-zinc-300 border rounded-lg px-3 py-2 text-sm bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-500 mb-1">Filter by Date</label>
+                  <input 
+                    type="date" 
+                    value={historyFilterDate}
+                    onChange={(e) => setHistoryFilterDate(e.target.value)}
+                    className="w-full border-zinc-300 border rounded-lg px-3 py-2 text-sm bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-500 mb-1">Filter by Buyer</label>
+                  <select
+                    value={historyFilterBuyer}
+                    onChange={(e) => setHistoryFilterBuyer(e.target.value)}
+                    className="w-full border-zinc-300 border rounded-lg px-3 py-2 text-sm bg-white"
+                  >
+                    <option value="ALL">All Buyers</option>
+                    {Array.from(new Set(invoices.map(inv => inv.buyerName))).map(buyerName => (
+                      <option key={buyerName} value={buyerName}>{buyerName}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-end">
+                  <button
+                    onClick={() => {
+                      setHistoryFilterMonth("");
+                      setHistoryFilterDate("");
+                      setHistoryFilterBuyer("ALL");
+                    }}
+                    className="w-full px-4 py-2 text-sm bg-zinc-200 text-zinc-700 rounded-lg hover:bg-zinc-300 font-medium transition-colors"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              </div>
+            </div>
             
-            {invoices.length === 0 ? (
+            {filteredInvoices.length === 0 ? (
               <div className="text-center py-16 text-zinc-500 bg-zinc-50 rounded-xl border border-zinc-200 border-dashed">
                 No invoices generated yet.
               </div>
@@ -509,7 +600,7 @@ export function EInvoiceTab() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-200">
-                    {invoices.map((inv) => (
+                    {filteredInvoices.map((inv) => (
                       <tr key={inv.id} className="hover:bg-zinc-50 transition-colors">
                         <td className="px-6 py-4 font-medium text-zinc-900">{inv.invoiceNo}</td>
                         <td className="px-6 py-4 whitespace-nowrap">{inv.date}</td>
@@ -604,33 +695,56 @@ export function EInvoiceTab() {
 
 
 // Reusable component to manage Companies and Buyers
-function EntityManager({ title, entities, setEntities }: { title: string, entities: any[], setEntities: any }) {
+function EntityManager({ title, entities, setEntities, companies }: { title: string, entities: any[], setEntities: any, companies?: Company[] }) {
   const [form, setForm] = useState({
     name: "",
     gstin: "",
     stateCode: "",
     pinCode: "",
     address: "",
-    location: ""
+    location: "",
+    companyId: ""
   });
+
+  const [sortBy, setSortBy] = useState<"none" | "company">("none");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.gstin) return;
     
     setEntities([...entities, { ...form, id: Date.now().toString() }]);
-    setForm({ name: "", gstin: "", stateCode: "", pinCode: "", address: "", location: "" });
+    setForm({ name: "", gstin: "", stateCode: "", pinCode: "", address: "", location: "", companyId: "" });
   };
 
   const removeEntity = (id: string) => {
-    setEntities(entities.filter((e) => e.id !== id));
+    setEntities(entities.filter((e: any) => e.id !== id));
   };
+
+  const displayEntities = [...entities].sort((a, b) => {
+    if (sortBy === "company" && companies) {
+      const compA = companies.find(c => c.id === a.companyId)?.name || "";
+      const compB = companies.find(c => c.id === b.companyId)?.name || "";
+      return compA.localeCompare(compB);
+    }
+    return 0;
+  });
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-1 bg-zinc-50 p-6 rounded-xl border border-zinc-200 h-fit">
         <h3 className="font-semibold text-zinc-900 mb-4">Add New {title}</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {title === "Buyer" && companies && (
+            <div>
+              <label className="block text-xs font-medium text-zinc-700 mb-1">Company</label>
+              <select required className="w-full rounded-md border-zinc-300 border px-3 py-2 text-sm bg-white" value={form.companyId} onChange={e => setForm({...form, companyId: e.target.value})}>
+                <option value="">-- Select Company --</option>
+                {companies.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div>
             <label className="block text-xs font-medium text-zinc-700 mb-1">{title} Name</label>
             <input required type="text" className="w-full rounded-md border-zinc-300 border px-3 py-2 text-sm" value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
@@ -664,30 +778,67 @@ function EntityManager({ title, entities, setEntities }: { title: string, entiti
       </div>
 
       <div className="lg:col-span-2 space-y-4">
-        <h3 className="font-semibold text-zinc-900 mb-4">Saved {title}s ({entities.length})</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-zinc-900">Saved {title}s ({entities.length})</h3>
+          {title === "Buyer" && (
+            <div className="flex items-center gap-2 text-sm">
+              <label className="text-zinc-600 font-medium">Sort by:</label>
+              <select 
+                className="border-zinc-300 border rounded-md px-2 py-1 bg-white"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+              >
+                <option value="none">Date Added</option>
+                <option value="company">Company</option>
+              </select>
+            </div>
+          )}
+        </div>
         {entities.length === 0 ? (
           <div className="text-center py-12 text-zinc-500 bg-zinc-50 rounded-xl border border-zinc-200 border-dashed">
             No {title.toLowerCase()}s added yet.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {entities.map(e => (
-              <div key={e.id} className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm relative pr-10">
-                <button 
-                  onClick={() => removeEntity(e.id)}
-                  className="absolute top-4 right-4 text-zinc-400 hover:text-red-500 transition-colors"
-                >
-                  <Trash2 size={16} />
-                </button>
-                <h4 className="font-semibold text-zinc-900">{e.name}</h4>
-                <div className="text-xs text-zinc-600 mt-2 space-y-1">
-                  <p><span className="font-medium text-zinc-500">GSTIN:</span> {e.gstin}</p>
-                  <p><span className="font-medium text-zinc-500">State Code:</span> {e.stateCode}</p>
-                  <p><span className="font-medium text-zinc-500">Location:</span> {e.location} - {e.pinCode}</p>
-                  <p className="truncate"><span className="font-medium text-zinc-500">Address:</span> {e.address}</p>
-                </div>
-              </div>
-            ))}
+          <div className="bg-white rounded-xl border border-zinc-200 overflow-x-auto shadow-sm">
+            <table className="w-full text-left text-sm text-zinc-600">
+              <thead className="bg-zinc-50 border-b border-zinc-200 text-xs font-semibold text-zinc-700 uppercase">
+                <tr>
+                  <th className="px-4 py-3">Name & GSTIN</th>
+                  <th className="px-4 py-3">Location & Address</th>
+                  {title === "Buyer" && <th className="px-4 py-3">Company</th>}
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-200">
+                {displayEntities.map((e: any) => (
+                  <tr key={e.id} className="hover:bg-zinc-50 transition-colors">
+                    <td className="px-4 py-3">
+                      <p className="font-semibold text-zinc-900">{e.name}</p>
+                      <p className="text-xs mt-0.5 text-zinc-500">GST: {e.gstin}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-zinc-800">{e.location} - {e.pinCode}</p>
+                      <p className="text-xs mt-0.5 text-zinc-500 truncate max-w-[200px]" title={e.address}>{e.address}</p>
+                      <p className="text-xs text-zinc-500">State Code: {e.stateCode}</p>
+                    </td>
+                    {title === "Buyer" && (
+                      <td className="px-4 py-3 font-medium text-zinc-700">
+                        {companies?.find(c => c.id === e.companyId)?.name || "-"}
+                      </td>
+                    )}
+                    <td className="px-4 py-3 text-right">
+                      <button 
+                        onClick={() => removeEntity(e.id)}
+                        className="text-zinc-400 hover:text-red-500 transition-colors p-1"
+                        title="Delete"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

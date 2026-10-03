@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     const data = await req.json();
 
     if (data.tenderNo) {
-      const existingTender = await Tender.findOne({ tenderNo: data.tenderNo, isDeleted: { $ne: true } });
+      const existingTender = await Tender.findOne({ tenderNo: data.tenderNo });
       if (existingTender) {
         return NextResponse.json({ message: "TENDER NUMBER IS ALREADY EXIST" }, { status: 400 });
       }

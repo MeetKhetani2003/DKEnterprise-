@@ -21,6 +21,7 @@ export function TendersTab({ role }: { role: string }) {
   const [filterCompany, setFilterCompany] = useState("ALL");
   const [filterTechnicalStatus, setFilterTechnicalStatus] = useState("ALL");
   const [filterAward, setFilterAward] = useState("ALL");
+  const [filterCategory, setFilterCategory] = useState("ALL");
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
   
@@ -266,12 +267,13 @@ export function TendersTab({ role }: { role: string }) {
     const matchesCompany = filterCompany === "ALL" || (tender.companies && tender.companies.includes(filterCompany));
     const matchesTechStatus = filterTechnicalStatus === "ALL" || tender.technicalStatus === filterTechnicalStatus || (!tender.technicalStatus && filterTechnicalStatus === "No Status");
     const matchesAward = filterAward === "ALL" || tender.award === filterAward;
+    const matchesCategory = filterCategory === "ALL" || tender.category === filterCategory;
     
     const tenderDate = tender.tenderLastDate ? new Date(tender.tenderLastDate).getTime() : 0;
     const matchesStartDate = !filterStartDate || tenderDate >= new Date(filterStartDate).getTime();
     const matchesEndDate = !filterEndDate || tenderDate <= new Date(filterEndDate).getTime();
 
-    return matchesSearch && matchesFiled && matchesCompany && matchesTechStatus && matchesAward && matchesStartDate && matchesEndDate;
+    return matchesSearch && matchesFiled && matchesCompany && matchesTechStatus && matchesAward && matchesCategory && matchesStartDate && matchesEndDate;
   }).sort((a, b) => {
     // Sort by closing date ascending
     const dateA = a.tenderLastDate ? new Date(a.tenderLastDate).getTime() : 0;
@@ -354,7 +356,19 @@ export function TendersTab({ role }: { role: string }) {
             <div><label className="block text-sm">LOCATION</label><input required name="location" value={formData.location} onChange={handleChange} className="w-full border p-2 rounded" /></div>
             <div><label className="block text-sm">OFFICE/DOCUMENTS</label><input required name="officeDocuments" value={formData.officeDocuments} onChange={handleChange} className="w-full border p-2 rounded" /></div>
             <div><label className="block text-sm">MSE PURCHASE PREFERENCE</label><select name="msePurchasePreference" value={formData.msePurchasePreference} onChange={handleChange} className="w-full border p-2 rounded"><option value="YES">YES</option><option value="NO">NO</option></select></div>
-            <div><label className="block text-sm">CATEGORY</label><input required name="category" value={formData.category} onChange={handleChange} className="w-full border p-2 rounded" /></div>
+            <div>
+              <label className="block text-sm">CATEGORY</label>
+              <select required name="category" value={formData.category} onChange={handleChange} className="w-full border p-2 rounded bg-white">
+                <option value="">SELECT CATEGORY</option>
+                <option value="MANPOWER OUTSOURCING SERVICE">MANPOWER OUTSOURCING SERVICE</option>
+                <option value="HIRING & SANITATION">HIRING & SANITATION</option>
+                <option value="CLEANING & SANITATION">CLEANING & SANITATION</option>
+                <option value="FACILITY MANAGEMENT SERVICE - LUMPSUM">FACILITY MANAGEMENT SERVICE - LUMPSUM</option>
+                <option value="FACILITY MANAGEMENT SERVICE - MANPOWER BASED">FACILITY MANAGEMENT SERVICE - MANPOWER BASED</option>
+                <option value="CUSTOM BID SERVICE">CUSTOM BID SERVICE</option>
+                <option value="HORTICULTURE SERVICES">HORTICULTURE SERVICES</option>
+              </select>
+            </div>
             <div><label className="block text-sm">CONTRACT PERIOD YEAR</label><input required name="contractPeriodYear" value={formData.contractPeriodYear} onChange={handleChange} className="w-full border p-2 rounded" /></div>
             <div><label className="block text-sm">MANPOWER</label><input required name="manpower" value={formData.manpower} onChange={handleChange} className="w-full border p-2 rounded" /></div>
             <div><label className="block text-sm">EMD</label><select name="emdExemption" value={formData.emdExemption} onChange={handleChange} className="w-full border p-2 rounded"><option value="YES">YES</option><option value="NO">NO</option></select></div>
@@ -375,7 +389,7 @@ export function TendersTab({ role }: { role: string }) {
 
       {/* Search and Filters */}
       <div className="p-4 bg-slate-50 border-b border-slate-200">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
           <div>
             <label className="block text-xs font-semibold text-slate-500 mb-1">Search</label>
 
@@ -410,6 +424,23 @@ export function TendersTab({ role }: { role: string }) {
             <option value="ALL">All</option>
             <option value="YES">YES</option>
             <option value="NO">NO</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-slate-500 mb-1">Category</label>
+          <select
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+            className="w-full border border-slate-300 p-2 rounded text-sm bg-white"
+          >
+            <option value="ALL">All Categories</option>
+            <option value="MANPOWER OUTSOURCING SERVICE">MANPOWER OUTSOURCING SERVICE</option>
+            <option value="HIRING & SANITATION">HIRING & SANITATION</option>
+            <option value="CLEANING & SANITATION">CLEANING & SANITATION</option>
+            <option value="FACILITY MANAGEMENT SERVICE - LUMPSUM">FACILITY MANAGEMENT SERVICE - LUMPSUM</option>
+            <option value="FACILITY MANAGEMENT SERVICE - MANPOWER BASED">FACILITY MANAGEMENT SERVICE - MANPOWER BASED</option>
+            <option value="CUSTOM BID SERVICE">CUSTOM BID SERVICE</option>
+            <option value="HORTICULTURE SERVICES">HORTICULTURE SERVICES</option>
           </select>
         </div>
         <div>
@@ -466,6 +497,7 @@ export function TendersTab({ role }: { role: string }) {
               setFilterCompany("ALL");
               setFilterTechnicalStatus("ALL");
               setFilterAward("ALL");
+              setFilterCategory("ALL");
               setFilterStartDate("");
               setFilterEndDate("");
             }}
