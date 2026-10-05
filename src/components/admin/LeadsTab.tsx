@@ -211,7 +211,7 @@ export function LeadsTab({ role }: { role: string }) {
             {filteredLeads.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-6 py-12 text-center text-zinc-500">
-                  No leads found. Click "Add New Lead" to create one.
+                  No leads found. Click &quot;Add New Lead&quot; to create one.
                 </td>
               </tr>
             )}
