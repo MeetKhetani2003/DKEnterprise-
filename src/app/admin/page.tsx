@@ -25,7 +25,8 @@ import { AdminsTab } from "@/components/admin/AdminsTab";
 import { DashboardTab } from "@/components/admin/DashboardTab";
 import { DeletedTendersTab } from "@/components/admin/DeletedTendersTab";
 import { EInvoiceTab } from "@/components/admin/EInvoiceTab";
-import { LayoutDashboard } from "lucide-react";
+import { LeadsTab } from "@/components/admin/LeadsTab";
+import { LayoutDashboard, Target } from "lucide-react";
 
 type CareerApplication = {
   _id: string;
@@ -60,7 +61,7 @@ export default function AdminDashboard() {
   const [userRole, setUserRole] = useState("");
   const [username, setUsername] = useState("");
   const [hasEInvoiceAccess, setHasEInvoiceAccess] = useState(false);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "careers" | "contacts" | "send-email" | "tenders" | "deleted-tenders" | "admins" | "e-invoice">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "careers" | "contacts" | "send-email" | "tenders" | "deleted-tenders" | "admins" | "e-invoice" | "leads">("dashboard");
   const [careerApplications, setCareerApplications] = useState<
     CareerApplication[]
   >([]);
@@ -265,6 +266,20 @@ export default function AdminDashboard() {
             </button>
           )}
 
+          {(userRole === "superadmin" || hasEInvoiceAccess) && (
+            <button
+              onClick={() => setActiveTab("leads")}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
+                activeTab === "leads"
+                  ? "bg-primary text-white shadow-lg shadow-primary/25"
+                  : "hover:bg-primary/5 hover:text-primary text-secondary"
+              }`}
+            >
+              <Target size={18} className={activeTab === "leads" ? "text-white" : "text-secondary"} />
+              Lead Management
+            </button>
+          )}
+
           <button
             onClick={() => setActiveTab("careers")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
@@ -373,6 +388,10 @@ export default function AdminDashboard() {
 
         {activeTab === "e-invoice" && (
           <EInvoiceTab />
+        )}
+
+        {activeTab === "leads" && (
+          <LeadsTab role={userRole} />
         )}
 
         {activeTab === "tenders" && (

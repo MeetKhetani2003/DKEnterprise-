@@ -44,62 +44,70 @@ type SavedInvoice = {
 export function EInvoiceTab() {
   const [activeSubTab, setActiveSubTab] = useState<"create" | "companies" | "buyers" | "history">("create");
 
-  // Load state from localStorage if available, otherwise use initial test data
-  const [companies, setCompanies] = useState<Company[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("einvoice_companies");
-      if (saved && saved !== "[]") return JSON.parse(saved);
-    }
-    return [
-      {
-        id: "test-seller-1",
-        name: "D K ENTERPRISE",
-        gstin: "24BQRPV1727M1Z4",
-        stateCode: "24",
-        pinCode: "360005",
-        address: "Office No- 409,Vyanktesh Vogue,150 Feet Ring Road,Indira Circle",
-        location: "Rajkot"
-      }
-    ];
-  });
-
-  const [buyers, setBuyers] = useState<Buyer[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("einvoice_buyers");
-      if (saved && saved !== "[]") return JSON.parse(saved);
-    }
-    return [
-      {
-        id: "test-buyer-1",
-        name: "GSPL INDIA GASNET LTD",
-        gstin: "03AAECG4433G1Z1",
-        stateCode: "03",
-        pinCode: "143001",
-        address: "393, Garden Enclave,khankot Garden colony,GT Road by pass,",
-        location: "Amritsar"
-      }
-    ];
-  });
-
-  const [invoices, setInvoices] = useState<SavedInvoice[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("einvoice_history");
-      if (saved) return JSON.parse(saved);
-    }
-    return [];
-  });
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [buyers, setBuyers] = useState<Buyer[]>([]);
+  const [invoices, setInvoices] = useState<SavedInvoice[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem("einvoice_companies", JSON.stringify(companies));
-  }, [companies]);
+    const savedCompanies = localStorage.getItem("einvoice_companies");
+    if (savedCompanies && savedCompanies !== "[]") {
+      setCompanies(JSON.parse(savedCompanies));
+    } else {
+      setCompanies([
+        {
+          id: "test-seller-1",
+          name: "D K ENTERPRISE",
+          gstin: "24BQRPV1727M1Z4",
+          stateCode: "24",
+          pinCode: "360005",
+          address: "Office No- 409,Vyanktesh Vogue,150 Feet Ring Road,Indira Circle",
+          location: "Rajkot"
+        }
+      ]);
+    }
+
+    const savedBuyers = localStorage.getItem("einvoice_buyers");
+    if (savedBuyers && savedBuyers !== "[]") {
+      setBuyers(JSON.parse(savedBuyers));
+    } else {
+      setBuyers([
+        {
+          id: "test-buyer-1",
+          name: "GSPL INDIA GASNET LTD",
+          gstin: "03AAECG4433G1Z1",
+          stateCode: "03",
+          pinCode: "143001",
+          address: "393, Garden Enclave,khankot Garden colony,GT Road by pass,",
+          location: "Amritsar"
+        }
+      ]);
+    }
+
+    const savedInvoices = localStorage.getItem("einvoice_history");
+    if (savedInvoices) {
+      setInvoices(JSON.parse(savedInvoices));
+    }
+    setIsLoaded(true);
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem("einvoice_buyers", JSON.stringify(buyers));
-  }, [buyers]);
+    if (isLoaded) {
+      localStorage.setItem("einvoice_companies", JSON.stringify(companies));
+    }
+  }, [companies, isLoaded]);
 
   useEffect(() => {
-    localStorage.setItem("einvoice_history", JSON.stringify(invoices));
-  }, [invoices]);
+    if (isLoaded) {
+      localStorage.setItem("einvoice_buyers", JSON.stringify(buyers));
+    }
+  }, [buyers, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem("einvoice_history", JSON.stringify(invoices));
+    }
+  }, [invoices, isLoaded]);
 
   const [selectedInvoice, setSelectedInvoice] = useState<SavedInvoice | null>(null);
 
@@ -257,7 +265,7 @@ export function EInvoiceTab() {
       totalAmount: Math.round(totalInvVal),
       jsonOutput: output
     };
-    setInvoices([newInvoiceRecord, ...invoices]);
+    setInvoices(prev => [newInvoiceRecord, ...prev]);
 
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(output, null, 4));
     const downloadAnchorNode = document.createElement('a');
