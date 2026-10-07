@@ -15,6 +15,70 @@ export function LeadsTab({ role }: { role: string }) {
   
   const [selectedLead, setSelectedLead] = useState<any>(null); // For sidebar details
   const [searchQuery, setSearchQuery] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+
+  const handleDownloadPDF = () => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+    
+    let tableHtml = `
+      <html>
+        <head>
+          <title>Leads Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h2 { text-align: center; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+          </style>
+        </head>
+        <body>
+          <h2>Leads Report</h2>
+          ${fromDate || toDate ? `<p>Date Range: ${fromDate || "Beginning"} to ${toDate || "Present"}</p>` : ""}
+          <table>
+            <thead>
+              <tr>
+                <th>Account Name</th>
+                <th>Vertical</th>
+                <th>Location</th>
+                <th>Stage</th>
+                <th>Est. Value</th>
+                <th>Next Action Date</th>
+                <th>Created At</th>
+              </tr>
+            </thead>
+            <tbody>
+    `;
+
+    filteredLeads.forEach(lead => {
+      tableHtml += `
+        <tr>
+          <td>${lead.accountName || "-"}</td>
+          <td>${lead.vertical || "-"}</td>
+          <td>${lead.location || "-"}</td>
+          <td>${lead.stage || "-"}</td>
+          <td>${lead.estimatedAnnualValue || "-"}</td>
+          <td>${lead.nextActionDate || "-"}</td>
+          <td>${lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : "-"}</td>
+        </tr>
+      `;
+    });
+
+    tableHtml += `
+            </tbody>
+          </table>
+          <script>
+            window.onload = function() { window.print(); window.close(); }
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(tableHtml);
+    printWindow.document.close();
+  };
 
   const [formData, setFormData] = useState({
     accountName: "",
@@ -142,10 +206,22 @@ export function LeadsTab({ role }: { role: string }) {
   };
 
   const filteredLeads = leads.filter(lead => {
+    let matchDate = true;
+    if (fromDate || toDate) {
+      if (lead.createdAt) {
+        const leadDate = new Date(lead.createdAt).getTime();
+        const start = fromDate ? new Date(fromDate).getTime() : 0;
+        const end = toDate ? new Date(toDate).getTime() + 86400000 : Infinity; // add 1 day to include end date
+        matchDate = leadDate >= start && leadDate <= end;
+      } else {
+        matchDate = false;
+      }
+    }
+
     const matchSearch = Object.values(lead).some(
       val => typeof val === "string" && val.toLowerCase().includes(searchQuery.toLowerCase())
     );
-    return matchSearch;
+    return matchSearch && matchDate;
   });
 
   const getStageStyles = (stage: string) => {
@@ -282,17 +358,18 @@ export function LeadsTab({ role }: { role: string }) {
             <select className="border border-zinc-200 rounded-lg px-3 py-2 text-sm text-zinc-600 bg-white min-w-[120px] outline-none">
               <option value="">Vertical</option>
             </select>
-            <select className="border border-zinc-200 rounded-lg px-3 py-2 text-sm text-zinc-600 bg-white min-w-[120px] outline-none">
-              <option value="">Stage</option>
-            </select>
-            <select className="border border-zinc-200 rounded-lg px-3 py-2 text-sm text-zinc-600 bg-white min-w-[120px] outline-none">
-              <option value="">Owner</option>
-            </select>
-            <select className="border border-zinc-200 rounded-lg px-3 py-2 text-sm text-zinc-600 bg-white min-w-[120px] outline-none">
-              <option value="">All Time</option>
-            </select>
-            <button className="bg-[#0f62fe] text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">Filter</button>
-            <button className="bg-white border border-zinc-200 text-zinc-600 px-5 py-2 rounded-lg text-sm font-medium hover:bg-zinc-50">Reset</button>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-zinc-500 font-medium">From:</span>
+              <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="border border-zinc-200 rounded-lg px-2 py-1.5 text-sm text-zinc-600 bg-white outline-none" />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-zinc-500 font-medium">To:</span>
+              <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="border border-zinc-200 rounded-lg px-2 py-1.5 text-sm text-zinc-600 bg-white outline-none" />
+            </div>
+            <button onClick={() => { setSearchQuery(""); setFromDate(""); setToDate(""); }} className="bg-white border border-zinc-200 text-zinc-600 px-5 py-2 rounded-lg text-sm font-medium hover:bg-zinc-50">Reset</button>
+            <button onClick={handleDownloadPDF} className="bg-teal-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-teal-700 flex items-center gap-2 ml-auto shadow-sm">
+              <FileText size={16} /> Download PDF
+            </button>
           </div>
 
           <div className="overflow-x-auto">

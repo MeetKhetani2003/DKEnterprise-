@@ -91,6 +91,26 @@ export function TendersTab({ role }: { role: string }) {
     }
   };
 
+  const handleDeleteCompany = async (companyId: string, companyName: string) => {
+    if (!window.confirm(`Are you sure you want to delete ${companyName}?`)) return;
+    try {
+      const res = await fetch(`/api/admin/companies/${companyId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setAvailableCompanies(prev => prev.filter(c => c._id !== companyId));
+        setFormData(prev => ({
+          ...prev,
+          companies: prev.companies.filter((c: string) => c !== companyName)
+        }));
+      } else {
+        alert("Failed to delete company");
+      }
+    } catch (error) {
+      console.error("Failed to delete company", error);
+    }
+  };
+
   const fetchTenders = async () => {
     try {
       const res = await fetch("/api/admin/tenders");
@@ -214,7 +234,10 @@ export function TendersTab({ role }: { role: string }) {
   };
 
   const isTenderNoDuplicate = formData.tenderNo 
-    ? tenders.some((t: any) => t.tenderNo === formData.tenderNo && t._id !== editingTenderId)
+    ? (formData.companies.length > 0 
+        ? tenders.some((t: any) => t.tenderNo === formData.tenderNo && t._id !== editingTenderId && t.companies?.some((c: string) => formData.companies.includes(c)))
+        : tenders.some((t: any) => t.tenderNo === formData.tenderNo && t._id !== editingTenderId && (!t.companies || t.companies.length === 0))
+      )
     : false;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -260,7 +283,8 @@ export function TendersTab({ role }: { role: string }) {
     const matchesSearch = 
       (tender.tenderNo && tender.tenderNo.toLowerCase().includes(searchLower)) ||
       (tender.departmentOrg && tender.departmentOrg.toLowerCase().includes(searchLower)) ||
-      (tender.companies && tender.companies.join(" ").toLowerCase().includes(searchLower));
+      (tender.companies && tender.companies.join(" ").toLowerCase().includes(searchLower)) ||
+      (tender.createdBy?.username && tender.createdBy.username.toLowerCase().includes(searchLower));
 
     // Filters
     const matchesFiled = filterFiled === "ALL" || tender.filed === filterFiled;
@@ -280,6 +304,13 @@ export function TendersTab({ role }: { role: string }) {
     const dateB = b.tenderLastDate ? new Date(b.tenderLastDate).getTime() : 0;
     return dateA - dateB;
   });
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "-";
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return `${d.getDate().toString().padStart(2, '0')} ${(d.getMonth() + 1).toString().padStart(2, '0')} ${d.getFullYear()}`;
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
@@ -322,27 +353,43 @@ export function TendersTab({ role }: { role: string }) {
               <label className="block text-sm font-semibold mb-2">COMPANIES</label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {availableCompanies.map(c => (
-                  <button
-                    key={c._id}
-                    type="button"
-                    onClick={() => toggleCompany(c.name)}
-                    className={`px-3 py-1 text-sm rounded-full border ${formData.companies.includes(c.name) ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-300 hover:border-slate-400'}`}
-                  >
-                    {c.name}
-                  </button>
+                  <div key={c._id} className={`flex items-center rounded-full border ${formData.companies.includes(c.name) ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-300 hover:border-slate-400'}`}>
+                    <button
+                      type="button"
+                      onClick={() => toggleCompany(c.name)}
+                      className={`px-3 py-1 text-sm ${role === 'superadmin' ? 'pr-2' : ''}`}
+                    >
+                      {c.name}
+                    </button>
+                    {role === 'superadmin' && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteCompany(c._id, c.name);
+                        }}
+                        className={`pr-3 py-1 ${formData.companies.includes(c.name) ? 'text-slate-300 hover:text-white' : 'text-slate-400 hover:text-red-500'}`}
+                        title="Delete Company"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
-              <div className="flex gap-2 max-w-sm">
-                <input
-                  type="text"
-                  placeholder="Add new company..."
-                  value={newCompany}
-                  onChange={(e) => setNewCompany(e.target.value.toUpperCase())}
-                  className="flex-1 border p-2 rounded text-sm uppercase"
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCompany(); } }}
-                />
-                <button type="button" onClick={handleAddCompany} className="bg-slate-200 px-4 py-2 rounded text-sm hover:bg-slate-300">Add</button>
-              </div>
+              {role === 'superadmin' && (
+                <div className="flex gap-2 max-w-sm">
+                  <input
+                    type="text"
+                    placeholder="Add new company..."
+                    value={newCompany}
+                    onChange={(e) => setNewCompany(e.target.value.toUpperCase())}
+                    className="flex-1 border p-2 rounded text-sm uppercase"
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCompany(); } }}
+                  />
+                  <button type="button" onClick={handleAddCompany} className="bg-slate-200 px-4 py-2 rounded text-sm hover:bg-slate-300">Add</button>
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-sm">TENDER NO</label>
@@ -395,7 +442,7 @@ export function TendersTab({ role }: { role: string }) {
 
           <input
             type="text"
-            placeholder="Tender No, Dept, Company..."
+            placeholder="Tender No, Dept, Company, Admin..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full border border-slate-300 p-2 rounded text-sm bg-white"
@@ -538,10 +585,18 @@ export function TendersTab({ role }: { role: string }) {
           <tbody className="bg-white divide-y divide-slate-200">
             {filteredTenders.map((tender) => (
               <tr key={tender._id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 uppercase">{tender.companies?.join(", ") || "-"}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 uppercase">
+                  {tender.companies && tender.companies.length > 0 ? (
+                    tender.companies.map((c: string) => (
+                      <span key={c} className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs mr-1 border border-blue-200">
+                        {c}
+                      </span>
+                    ))
+                  ) : "-"}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">{tender.tenderNo}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">{tender.departmentOrg}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">{tender.tenderLastDate}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">{formatDate(tender.tenderLastDate)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">
                   <select
                     value={tender.filed || "NO"}

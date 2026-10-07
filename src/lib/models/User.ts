@@ -5,6 +5,7 @@ export interface IUser extends Document {
   password?: string;
   role: string;
   hasEInvoiceAccess?: boolean;
+  hasLeadAccess?: boolean;
   createdAt: Date;
 }
 
@@ -24,6 +25,10 @@ const UserSchema = new mongoose.Schema<IUser>({
     default: "admin",
   },
   hasEInvoiceAccess: {
+    type: Boolean,
+    default: false,
+  },
+  hasLeadAccess: {
     type: Boolean,
     default: false,
   },

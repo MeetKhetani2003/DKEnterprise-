@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Trash2, Download, Building2, Users, FileText, Check, FileJson, List, Eye, X } from "lucide-react";
+import { Plus, Trash2, Edit2, Download, Building2, Users, FileText, Check, FileJson, List, Eye, X } from "lucide-react";
 
 type Company = {
   id: string;
@@ -41,7 +41,7 @@ type SavedInvoice = {
   jsonOutput: any;
 };
 
-export function EInvoiceTab() {
+export function EInvoiceTab({ role }: { role: string }) {
   const [activeSubTab, setActiveSubTab] = useState<"create" | "companies" | "buyers" | "history">("create");
 
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -117,13 +117,13 @@ export function EInvoiceTab() {
   const [historyFilterBuyer, setHistoryFilterBuyer] = useState("ALL");
 
   // Invoice Form State
-  const [selectedCompanyId, setSelectedCompanyId] = useState("test-seller-1");
-  const [selectedBuyerId, setSelectedBuyerId] = useState("test-buyer-1");
-  const [invoiceNo, setInvoiceNo] = useState("GIGL/PUN/021");
-  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState("");
+  const [selectedBuyerId, setSelectedBuyerId] = useState("");
+  const [invoiceNo, setInvoiceNo] = useState("");
+  const [invoiceDate, setInvoiceDate] = useState("");
   
   const [items, setItems] = useState<InvoiceItem[]>([
-    { description: "HOUSEKEEPING SERVICES AT AMRITSAR & BHATINDA BASE", hsnCode: "998533", supplyType: "Services", taxableAmount: 396722.0 }
+    { description: "", hsnCode: "", supplyType: "Services", taxableAmount: 0 }
   ]);
 
   // Handle item change
@@ -279,7 +279,7 @@ export function EInvoiceTab() {
     setSelectedCompanyId("");
     setSelectedBuyerId("");
     setInvoiceNo("");
-    setInvoiceDate(new Date().toISOString().split('T')[0]);
+    setInvoiceDate("");
     setItems([{ description: "", hsnCode: "", supplyType: "Services", taxableAmount: 0 }]);
     setActiveSubTab("history");
   };
@@ -523,6 +523,7 @@ export function EInvoiceTab() {
             title="Company"
             entities={companies}
             setEntities={setCompanies}
+            role={role}
           />
         )}
 
@@ -532,6 +533,7 @@ export function EInvoiceTab() {
             entities={buyers}
             setEntities={setBuyers}
             companies={companies}
+            role={role}
           />
         )}
 
@@ -703,7 +705,7 @@ export function EInvoiceTab() {
 
 
 // Reusable component to manage Companies and Buyers
-function EntityManager({ title, entities, setEntities, companies }: { title: string, entities: any[], setEntities: any, companies?: Company[] }) {
+function EntityManager({ title, entities, setEntities, companies, role }: { title: string, entities: any[], setEntities: any, companies?: Company[], role: string }) {
   const [form, setForm] = useState({
     name: "",
     gstin: "",
@@ -713,6 +715,8 @@ function EntityManager({ title, entities, setEntities, companies }: { title: str
     location: "",
     companyId: ""
   });
+  
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [sortBy, setSortBy] = useState<"none" | "company">("none");
 
@@ -720,8 +724,26 @@ function EntityManager({ title, entities, setEntities, companies }: { title: str
     e.preventDefault();
     if (!form.name || !form.gstin) return;
     
-    setEntities([...entities, { ...form, id: Date.now().toString() }]);
+    if (editingId) {
+      setEntities(entities.map(e => e.id === editingId ? { ...form, id: editingId } : e));
+      setEditingId(null);
+    } else {
+      setEntities([...entities, { ...form, id: Date.now().toString() }]);
+    }
     setForm({ name: "", gstin: "", stateCode: "", pinCode: "", address: "", location: "", companyId: "" });
+  };
+
+  const handleEdit = (entity: any) => {
+    setForm({
+      name: entity.name || "",
+      gstin: entity.gstin || "",
+      stateCode: entity.stateCode || "",
+      pinCode: entity.pinCode || "",
+      address: entity.address || "",
+      location: entity.location || "",
+      companyId: entity.companyId || ""
+    });
+    setEditingId(entity.id);
   };
 
   const removeEntity = (id: string) => {
@@ -740,7 +762,12 @@ function EntityManager({ title, entities, setEntities, companies }: { title: str
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-1 bg-zinc-50 p-6 rounded-xl border border-zinc-200 h-fit">
-        <h3 className="font-semibold text-zinc-900 mb-4">Add New {title}</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-zinc-900">{editingId ? `Edit ${title}` : `Add New ${title}`}</h3>
+          {editingId && (
+            <button type="button" onClick={() => { setEditingId(null); setForm({ name: "", gstin: "", stateCode: "", pinCode: "", address: "", location: "", companyId: "" }); }} className="text-sm text-zinc-500 hover:text-zinc-700">Cancel Edit</button>
+          )}
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           {title === "Buyer" && companies && (
             <div>
@@ -780,7 +807,7 @@ function EntityManager({ title, entities, setEntities, companies }: { title: str
             <textarea required rows={2} className="w-full rounded-md border-zinc-300 border px-3 py-2 text-sm" value={form.address} onChange={e => setForm({...form, address: e.target.value})} />
           </div>
           <button type="submit" className="w-full bg-primary text-white py-2 rounded-md font-medium text-sm hover:bg-primary/90">
-            Save {title}
+            {editingId ? `Update ${title}` : `Save ${title}`}
           </button>
         </form>
       </div>
@@ -835,13 +862,24 @@ function EntityManager({ title, entities, setEntities, companies }: { title: str
                       </td>
                     )}
                     <td className="px-4 py-3 text-right">
-                      <button 
-                        onClick={() => removeEntity(e.id)}
-                        className="text-zinc-400 hover:text-red-500 transition-colors p-1"
-                        title="Delete"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        {role === 'superadmin' && (
+                          <button 
+                            onClick={() => handleEdit(e)}
+                            className="text-blue-500 hover:text-blue-700 transition-colors p-1"
+                            title="Edit"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => removeEntity(e.id)}
+                          className="text-zinc-400 hover:text-red-500 transition-colors p-1"
+                          title="Delete"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

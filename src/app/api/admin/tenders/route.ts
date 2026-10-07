@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongoose";
 import Tender from "@/lib/models/Tender";
@@ -33,21 +34,45 @@ export async function POST(req: Request) {
 
     await dbConnect();
     const data = await req.json();
+    const companies = data.companies || [];
 
-    if (data.tenderNo) {
-      const existingTender = await Tender.findOne({ tenderNo: data.tenderNo });
-      if (existingTender) {
-        return NextResponse.json({ message: "TENDER NUMBER IS ALREADY EXIST" }, { status: 400 });
+    if (companies.length === 0) {
+      if (data.tenderNo) {
+        const existingTender = await Tender.findOne({ tenderNo: data.tenderNo, companies: { $size: 0 } });
+        if (existingTender) {
+          return NextResponse.json({ message: "TENDER NUMBER IS ALREADY EXIST" }, { status: 400 });
+        }
       }
+      
+      const newTender = new Tender({
+        ...data,
+        createdBy: user.id,
+      });
+      await newTender.save();
+      return NextResponse.json({ message: "Tender created successfully", tender: newTender }, { status: 201 });
     }
 
-    const newTender = new Tender({
-      ...data,
-      createdBy: user.id,
-    });
+    if (data.tenderNo) {
+       for (const comp of companies) {
+         const existing = await Tender.findOne({ tenderNo: data.tenderNo, companies: comp });
+         if (existing) {
+           return NextResponse.json({ message: `TENDER NUMBER IS ALREADY EXIST FOR COMPANY ${comp}` }, { status: 400 });
+         }
+       }
+    }
 
-    await newTender.save();
-    return NextResponse.json({ message: "Tender created successfully", tender: newTender }, { status: 201 });
+    const createdTenders = [];
+    for (const comp of companies) {
+      const newTender = new Tender({
+        ...data,
+        companies: [comp],
+        createdBy: user.id,
+      });
+      await newTender.save();
+      createdTenders.push(newTender);
+    }
+
+    return NextResponse.json({ message: "Tender created successfully", tender: createdTenders[0] }, { status: 201 });
   } catch (error) {
     console.error("Create tender error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });

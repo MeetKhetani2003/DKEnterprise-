@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { User, Lock, Globe } from "lucide-react";
 
-export function Login({ onLogin }: { onLogin: (role: string, username: string, hasEInvoiceAccess: boolean) => void }) {
+export function Login({ onLogin }: { onLogin: (role: string, username: string, hasEInvoiceAccess: boolean, hasLeadAccess: boolean) => void }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -23,7 +23,7 @@ export function Login({ onLogin }: { onLogin: (role: string, username: string, h
       });
       const data = await res.json();
       if (res.ok) {
-        onLogin(data.role, data.username, data.hasEInvoiceAccess || false);
+        onLogin(data.role, data.username, data.hasEInvoiceAccess || false, data.hasLeadAccess || false);
       } else {
         setError(data.message || "Login failed");
       }

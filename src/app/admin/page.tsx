@@ -61,6 +61,7 @@ export default function AdminDashboard() {
   const [userRole, setUserRole] = useState("");
   const [username, setUsername] = useState("");
   const [hasEInvoiceAccess, setHasEInvoiceAccess] = useState(false);
+  const [hasLeadAccess, setHasLeadAccess] = useState(false);
   const [activeTab, setActiveTab] = useState<"dashboard" | "careers" | "contacts" | "send-email" | "tenders" | "deleted-tenders" | "admins" | "e-invoice" | "leads">("dashboard");
   const [careerApplications, setCareerApplications] = useState<
     CareerApplication[]
@@ -84,6 +85,16 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     try {
+      const meRes = await fetch("/api/admin/me");
+      if (meRes.ok) {
+        const meData = await meRes.json();
+        setIsAuthenticated(true);
+        setUserRole(meData.role);
+        setUsername(meData.username);
+        setHasEInvoiceAccess(meData.hasEInvoiceAccess || false);
+        setHasLeadAccess(meData.hasLeadAccess || false);
+      }
+
       const [careersRes, contactsRes] = await Promise.all([
         fetch("/api/admin/careers"),
         fetch("/api/admin/contacts"),
@@ -162,11 +173,12 @@ export default function AdminDashboard() {
   if (!isAuthenticated) {
     return (
       <Login
-        onLogin={(role, uname, einvoiceAccess) => {
+        onLogin={(role, uname, einvoiceAccess, leadAccess) => {
           setIsAuthenticated(true);
           setUserRole(role);
           setUsername(uname);
           setHasEInvoiceAccess(einvoiceAccess);
+          setHasLeadAccess(leadAccess || false);
         }}
       />
     );
@@ -266,7 +278,7 @@ export default function AdminDashboard() {
             </button>
           )}
 
-          {(userRole === "superadmin" || hasEInvoiceAccess) && (
+          {(userRole === "superadmin" || hasLeadAccess) && (
             <button
               onClick={() => setActiveTab("leads")}
               className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
@@ -312,17 +324,19 @@ export default function AdminDashboard() {
 
 
 
-          <button
-            onClick={() => setActiveTab("send-email")}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
-              activeTab === "send-email"
-                ? "bg-primary text-white shadow-lg shadow-primary/25"
-                : "hover:bg-primary/5 hover:text-primary text-secondary"
-            }`}
-          >
-            <Send size={18} className={activeTab === "send-email" ? "text-white" : "text-secondary"} />
-            Send Email
-          </button>
+          {userRole === "superadmin" && (
+            <button
+              onClick={() => setActiveTab("send-email")}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
+                activeTab === "send-email"
+                  ? "bg-primary text-white shadow-lg shadow-primary/25"
+                  : "hover:bg-primary/5 hover:text-primary text-secondary"
+              }`}
+            >
+              <Send size={18} className={activeTab === "send-email" ? "text-white" : "text-secondary"} />
+              Send Email
+            </button>
+          )}
 
 
         </nav>
@@ -387,7 +401,7 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === "e-invoice" && (
-          <EInvoiceTab />
+          <EInvoiceTab role={userRole} />
         )}
 
         {activeTab === "leads" && (

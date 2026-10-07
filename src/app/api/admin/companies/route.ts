@@ -22,7 +22,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const user = getUserFromCookie();
-    if (!user) {
+    if (!user || user.role !== 'superadmin') {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 

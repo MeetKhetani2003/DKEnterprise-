@@ -13,6 +13,7 @@ export function AdminsTab() {
     username: "",
     password: "",
     hasEInvoiceAccess: false,
+    hasLeadAccess: false,
   });
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -62,7 +63,7 @@ export function AdminsTab() {
         setShowForm(false);
         setEditingId(null);
         fetchAdmins();
-        setFormData({ username: "", password: "", hasEInvoiceAccess: false });
+        setFormData({ username: "", password: "", hasEInvoiceAccess: false, hasLeadAccess: false });
       } else {
         const data = await res.json();
         setError(data.message || (editingId ? "Failed to update admin" : "Failed to create admin"));
@@ -73,7 +74,7 @@ export function AdminsTab() {
   };
 
   const handleEdit = (admin: any) => {
-    setFormData({ username: admin.username, password: "", hasEInvoiceAccess: admin.hasEInvoiceAccess || false });
+    setFormData({ username: admin.username, password: "", hasEInvoiceAccess: admin.hasEInvoiceAccess || false, hasLeadAccess: admin.hasLeadAccess || false });
     setEditingId(admin._id);
     setShowForm(true);
   };
@@ -104,7 +105,7 @@ export function AdminsTab() {
         <button
           onClick={() => {
             setEditingId(null);
-            setFormData({ username: "", password: "", hasEInvoiceAccess: false });
+            setFormData({ username: "", password: "", hasEInvoiceAccess: false, hasLeadAccess: false });
             setShowForm(true);
           }}
           className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-md hover:bg-slate-800"
@@ -142,6 +143,16 @@ export function AdminsTab() {
                 />
                 <span className="text-sm font-medium">E-Invoice Access</span>
               </label>
+              <label className="flex items-center gap-2 cursor-pointer mt-2">
+                <input 
+                  type="checkbox" 
+                  name="hasLeadAccess" 
+                  checked={formData.hasLeadAccess} 
+                  onChange={handleChange} 
+                  className="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary"
+                />
+                <span className="text-sm font-medium">Lead Access</span>
+              </label>
             </div>
             <button type="submit" className="bg-primary text-white px-6 py-2 rounded hover:bg-primary/90 h-[42px] mb-2">
               {editingId ? "Update Admin" : "Create Admin"}
@@ -156,6 +167,7 @@ export function AdminsTab() {
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Username</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">E-Invoice Access</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Lead Access</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Created At</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
             </tr>
@@ -167,6 +179,11 @@ export function AdminsTab() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${admin.hasEInvoiceAccess ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
                     {admin.hasEInvoiceAccess ? 'Yes' : 'No'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${admin.hasLeadAccess ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
+                    {admin.hasLeadAccess ? 'Yes' : 'No'}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{new Date(admin.createdAt).toLocaleDateString()}</td>
