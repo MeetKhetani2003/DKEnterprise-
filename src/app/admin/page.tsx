@@ -116,6 +116,19 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/admin/logout", { method: "POST" });
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setIsAuthenticated(false);
+      setUserRole("");
+      setUsername("");
+      window.location.reload();
+    }
+  };
+
   const downloadFile = async (fileId: string, bucketName: string) => {
     try {
       const response = await fetch(
@@ -342,7 +355,7 @@ export default function AdminDashboard() {
         </nav>
         <div className="p-6 border-t border-secondary/10">
            <button 
-             onClick={() => window.location.reload()} 
+             onClick={handleLogout} 
              className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-secondary hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-300"
            >
              <LogOut size={16} />

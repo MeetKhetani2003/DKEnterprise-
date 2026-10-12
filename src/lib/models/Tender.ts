@@ -24,6 +24,8 @@ export interface ITender extends Document {
   deletedBy?: mongoose.Types.ObjectId;
   deletedAt?: Date;
   createdBy: mongoose.Types.ObjectId;
+  assignedAdmin?: mongoose.Types.ObjectId;
+  assignedAdmins?: mongoose.Types.ObjectId[];
   createdAt: Date;
 }
 
@@ -32,7 +34,7 @@ const TenderSchema = new mongoose.Schema<ITender>({
   tenderNo: { type: String, required: true },
   departmentOrg: { type: String, required: true },
   tenderLastDate: { type: String, required: true },
-  filed: { type: String, enum: ["YES", "NO"], required: true },
+  filed: { type: String, enum: ["YES", "NO"], default: "NO" },
   bidClosingTime: { type: String, required: true },
   location: { type: String, required: true },
   officeDocuments: { type: String, required: true },
@@ -55,10 +57,24 @@ const TenderSchema = new mongoose.Schema<ITender>({
     ref: "User",
     required: true,
   },
+  assignedAdmin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
+  assignedAdmins: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  }],
   createdAt: {
     type: Date,
     default: Date.now,
   },
 });
+
+(TenderSchema as any).set('strictPopulate', false);
+
+if (mongoose.models && mongoose.models.Tender) {
+  delete (mongoose.models as any).Tender;
+}
 
 export default (mongoose.models.Tender as Model<ITender>) || mongoose.model<ITender>("Tender", TenderSchema);

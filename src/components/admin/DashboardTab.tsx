@@ -2,19 +2,21 @@
 
 import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { FileSpreadsheet, CheckCircle, XCircle, Trophy, IndianRupee, Download } from "lucide-react";
+import { FileSpreadsheet, CheckCircle, XCircle, Trophy, IndianRupee, Download, Files } from "lucide-react";
 
 const COLORS = ["#10b981", "#ef4444", "#f59e0b", "#64748b"]; // emerald, red, amber, slate
 
 export function DashboardTab() {
   const [tenders, setTenders] = useState<any[]>([]);
+  const [companies, setCompanies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
-
+  const [filterCompany, setFilterCompany] = useState("ALL");
 
   useEffect(() => {
     fetchTenders();
+    fetchCompanies();
   }, []);
 
   const fetchTenders = async () => {
@@ -31,18 +33,33 @@ export function DashboardTab() {
     }
   };
 
+  const fetchCompanies = async () => {
+    try {
+      const res = await fetch("/api/admin/companies");
+      if (res.ok) {
+        const data = await res.json();
+        setCompanies(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch companies", error);
+    }
+  };
+
   if (loading) return <div className="text-slate-500">Loading dashboard...</div>;
 
-  // Filter tenders by date
+  // Filter tenders by date and company
   const filteredTenders = tenders.filter(tender => {
     const tenderDate = tender.tenderLastDate ? new Date(tender.tenderLastDate).getTime() : 0;
     const matchesStartDate = !filterStartDate || tenderDate >= new Date(filterStartDate).getTime();
     const matchesEndDate = !filterEndDate || tenderDate <= new Date(filterEndDate).getTime();
-    return matchesStartDate && matchesEndDate;
+    const matchesCompany = filterCompany === "ALL" || (tender.companies && (Array.isArray(tender.companies) ? tender.companies.includes(filterCompany) : tender.companies === filterCompany));
+    return matchesStartDate && matchesEndDate && matchesCompany;
   });
 
   // Calculate stats
-  const totalTenders = filteredTenders.filter(t => t.filed === "YES").length;
+  const totalTenders = filteredTenders.length;
+  const totalFiledTenders = filteredTenders.filter(t => t.filed === "YES").length;
+  const activeTenders = Math.max(0, totalTenders - totalFiledTenders);
   const overallTotal = filteredTenders.length;
 
   const exportToCSV = () => {
@@ -166,8 +183,21 @@ export function DashboardTab() {
 
   return (
     <div className="space-y-6">
-      {/* Date Filter */}
+      {/* Filters */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-wrap gap-4 items-end">
+        <div>
+          <label className="block text-xs font-semibold text-slate-500 mb-1">Company</label>
+          <select
+            value={filterCompany}
+            onChange={(e) => setFilterCompany(e.target.value)}
+            className="w-full min-w-[200px] border border-slate-300 p-2 rounded text-sm bg-white"
+          >
+            <option value="ALL">All Companies</option>
+            {companies.map(c => (
+              <option key={c._id} value={c.name}>{c.name}</option>
+            ))}
+          </select>
+        </div>
         <div>
           <label className="block text-xs font-semibold text-slate-500 mb-1">From Date (Closing Date)</label>
           <input
@@ -189,12 +219,13 @@ export function DashboardTab() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => {
+              setFilterCompany("ALL");
               setFilterStartDate("");
               setFilterEndDate("");
             }}
             className="px-4 py-2 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300"
           >
-            Clear Dates
+            Clear Filters
           </button>
           
           <button
@@ -211,11 +242,21 @@ export function DashboardTab() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex items-center gap-4">
           <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+            <Files size={24} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Tenders</p>
+            <p className="text-2xl font-bold text-slate-900">{totalTenders}</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-violet-100 flex items-center justify-center text-violet-600">
             <FileSpreadsheet size={24} />
           </div>
           <div>
             <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Filed Tenders</p>
-            <p className="text-2xl font-bold text-slate-900">{totalTenders}</p>
+            <p className="text-2xl font-bold text-slate-900">{totalFiledTenders}</p>
           </div>
         </div>
 
@@ -259,7 +300,7 @@ export function DashboardTab() {
           </div>
           <div>
             <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Active Tenders</p>
-            <p className="text-2xl font-bold text-slate-900">{noStatus}</p>
+            <p className="text-2xl font-bold text-slate-900">{activeTenders}</p>
           </div>
         </div>
 
@@ -348,6 +389,7 @@ export function DashboardTab() {
           <table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-slate-50">
               <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Sr No.</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tender No</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Department</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Last Date</th>
@@ -356,8 +398,9 @@ export function DashboardTab() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-200">
-              {filteredTenders.slice(0, 5).map(tender => (
+              {filteredTenders.slice(0, 5).map((tender, index) => (
                 <tr key={tender._id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-medium">{index + 1}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{tender.tenderNo}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.departmentOrg}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.tenderLastDate}</td>
@@ -380,7 +423,7 @@ export function DashboardTab() {
               ))}
               {filteredTenders.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-sm text-slate-500">No tenders found</td>
+                  <td colSpan={6} className="px-6 py-4 text-center text-sm text-slate-500">No tenders found</td>
                 </tr>
               )}
             </tbody>

@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongoose";
 import Tender from "@/lib/models/Tender";
+import User from "@/lib/models/User";
 import { getUserFromCookie } from "@/lib/auth";
 
 export async function GET(req: Request) {
@@ -13,10 +14,23 @@ export async function GET(req: Request) {
 
     await dbConnect();
     
-    const query: any = user.role === "superadmin" ? { isDeleted: { $ne: true } } : { createdBy: user.id, isDeleted: { $ne: true } };
+    const query: any = user.role === "superadmin" 
+      ? { isDeleted: { $ne: true } } 
+      : { 
+          isDeleted: { $ne: true }, 
+          $or: [
+            { createdBy: user.id },
+            { assignedAdmins: user.id },
+            { assignedAdmin: user.id }
+          ] 
+        };
     
-    // Fetch and populate createdBy if you want to show who created it
-    const tenders = await Tender.find(query).populate("createdBy", "username role").sort({ createdAt: -1 });
+    // Fetch and populate createdBy, assignedAdmin, and assignedAdmins
+    const tenders = await Tender.find(query)
+      .populate({ path: "createdBy", select: "username role", strictPopulate: false })
+      .populate({ path: "assignedAdmin", select: "username role", strictPopulate: false })
+      .populate({ path: "assignedAdmins", select: "username role", strictPopulate: false })
+      .sort({ createdAt: -1 });
 
     return NextResponse.json(tenders);
   } catch (error) {
@@ -34,45 +48,34 @@ export async function POST(req: Request) {
 
     await dbConnect();
     const data = await req.json();
+    if (data.assignedAdmin === "") {
+      data.assignedAdmin = null;
+    }
+    if (data.assignedAdmins && Array.isArray(data.assignedAdmins)) {
+      data.assignedAdmins = data.assignedAdmins.filter(Boolean);
+    }
     const companies = data.companies || [];
 
-    if (companies.length === 0) {
-      if (data.tenderNo) {
-        const existingTender = await Tender.findOne({ tenderNo: data.tenderNo, companies: { $size: 0 } });
-        if (existingTender) {
-          return NextResponse.json({ message: "TENDER NUMBER IS ALREADY EXIST" }, { status: 400 });
-        }
+    const tenderNoTrimmed = data.tenderNo ? String(data.tenderNo).trim() : "";
+    if (tenderNoTrimmed) {
+      const escaped = tenderNoTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const existingTender = await Tender.findOne({
+        tenderNo: { $regex: new RegExp(`^${escaped}$`, 'i') },
+        isDeleted: { $ne: true }
+      });
+      if (existingTender) {
+        return NextResponse.json({ message: "TENDER NUMBER IS ALREADY EXIST" }, { status: 400 });
       }
-      
-      const newTender = new Tender({
-        ...data,
-        createdBy: user.id,
-      });
-      await newTender.save();
-      return NextResponse.json({ message: "Tender created successfully", tender: newTender }, { status: 201 });
     }
 
-    if (data.tenderNo) {
-       for (const comp of companies) {
-         const existing = await Tender.findOne({ tenderNo: data.tenderNo, companies: comp });
-         if (existing) {
-           return NextResponse.json({ message: `TENDER NUMBER IS ALREADY EXIST FOR COMPANY ${comp}` }, { status: 400 });
-         }
-       }
-    }
-
-    const createdTenders = [];
-    for (const comp of companies) {
-      const newTender = new Tender({
-        ...data,
-        companies: [comp],
-        createdBy: user.id,
-      });
-      await newTender.save();
-      createdTenders.push(newTender);
-    }
-
-    return NextResponse.json({ message: "Tender created successfully", tender: createdTenders[0] }, { status: 201 });
+    const newTender = new Tender({
+      ...data,
+      tenderNo: tenderNoTrimmed,
+      companies,
+      createdBy: user.id,
+    });
+    await newTender.save();
+    return NextResponse.json({ message: "Tender created successfully", tender: newTender }, { status: 201 });
   } catch (error) {
     console.error("Create tender error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });

@@ -24,8 +24,11 @@ export function TendersTab({ role }: { role: string }) {
   const [filterCategory, setFilterCategory] = useState("ALL");
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
+  const [adminsList, setAdminsList] = useState<any[]>([]);
+  const [openAccessPopover, setOpenAccessPopover] = useState<string | null>(null);
+  const [isDbDuplicate, setIsDbDuplicate] = useState(false);
   
-  const [formData, setFormData] = useState<{ companies: string[], [key: string]: any }>({
+  const [formData, setFormData] = useState<{ companies: string[], assignedAdmins?: string[], [key: string]: any }>({
     companies: [],
     tenderNo: "",
     departmentOrg: "",
@@ -44,12 +47,60 @@ export function TendersTab({ role }: { role: string }) {
     bidValue: "",
     technicalStatus: "No Status",
     award: "NO",
+    assignedAdmin: "",
+    assignedAdmins: [],
   });
+
+  const getAssignedAdminIds = (tender: any): string[] => {
+    if (Array.isArray(tender.assignedAdmins) && tender.assignedAdmins.length > 0) {
+      return tender.assignedAdmins.map((a: any) => (a._id || a).toString());
+    }
+    if (tender.assignedAdmin) {
+      return [(tender.assignedAdmin._id || tender.assignedAdmin).toString()];
+    }
+    return [];
+  };
+
+  const getAssignedAdminsList = (tender: any) => {
+    if (Array.isArray(tender.assignedAdmins) && tender.assignedAdmins.length > 0) {
+      return tender.assignedAdmins.map((a: any) =>
+        typeof a === "object" && a !== null
+          ? a
+          : adminsList.find((x) => x._id === a) || { _id: a, username: "Admin" }
+      );
+    }
+    if (tender.assignedAdmin) {
+      return [
+        typeof tender.assignedAdmin === "object" && tender.assignedAdmin !== null
+          ? tender.assignedAdmin
+          : adminsList.find((x) => x._id === tender.assignedAdmin) || {
+              _id: tender.assignedAdmin,
+              username: "Admin",
+            },
+      ];
+    }
+    return [];
+  };
 
   useEffect(() => {
     fetchTenders();
     fetchCompanies();
-  }, []);
+    if (role === "superadmin") {
+      fetchAdmins();
+    }
+  }, [role]);
+
+  const fetchAdmins = async () => {
+    try {
+      const res = await fetch("/api/admin/users");
+      if (res.ok) {
+        const data = await res.json();
+        setAdminsList(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch admins", error);
+    }
+  };
 
   const fetchCompanies = async () => {
     try {
@@ -182,6 +233,56 @@ export function TendersTab({ role }: { role: string }) {
     }
   };
 
+  const handleToggleAdminInTable = async (tender: any, adminId: string) => {
+    const currentIds = getAssignedAdminIds(tender);
+    const newIds = currentIds.includes(adminId)
+      ? currentIds.filter((id) => id !== adminId)
+      : [...currentIds, adminId];
+
+    const updatedAdmins = newIds.map(
+      (id) => adminsList.find((a) => a._id === id) || { _id: id }
+    );
+
+    setTenders((prev) =>
+      prev.map((t) =>
+        t._id === tender._id
+          ? {
+              ...t,
+              assignedAdmins: updatedAdmins,
+              assignedAdmin: newIds[0] || null,
+            }
+          : t
+      )
+    );
+
+    try {
+      const res = await fetch(`/api/admin/tenders/${tender._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assignedAdmins: newIds,
+          assignedAdmin: newIds[0] || null,
+        }),
+      });
+      if (!res.ok) {
+        fetchTenders();
+      }
+    } catch (error) {
+      console.error("Failed to update tender access", error);
+      fetchTenders();
+    }
+  };
+
+  const toggleAdminInForm = (adminId: string) => {
+    setFormData((prev) => {
+      const current = prev.assignedAdmins || [];
+      const assignedAdmins = current.includes(adminId)
+        ? current.filter((id: string) => id !== adminId)
+        : [...current, adminId];
+      return { ...prev, assignedAdmins, assignedAdmin: assignedAdmins[0] || "" };
+    });
+  };
+
   const handleDeleteTender = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tenderToDelete) return;
@@ -224,21 +325,51 @@ export function TendersTab({ role }: { role: string }) {
       bidValue: tender.bidValue || "",
       technicalStatus: tender.technicalStatus || "No Status",
       award: tender.award || "NO",
+      assignedAdmin: tender.assignedAdmin?._id || tender.assignedAdmin || "",
+      assignedAdmins: getAssignedAdminIds(tender),
     });
     setFormError("");
     setShowForm(true);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value.toUpperCase() });
+    const val = e.target.name === "assignedAdmin" ? e.target.value : e.target.value.toUpperCase();
+    setFormData({ ...formData, [e.target.name]: val });
   };
 
-  const isTenderNoDuplicate = formData.tenderNo 
-    ? (formData.companies.length > 0 
-        ? tenders.some((t: any) => t.tenderNo === formData.tenderNo && t._id !== editingTenderId && t.companies?.some((c: string) => formData.companies.includes(c)))
-        : tenders.some((t: any) => t.tenderNo === formData.tenderNo && t._id !== editingTenderId && (!t.companies || t.companies.length === 0))
-      )
-    : false;
+  useEffect(() => {
+    const tenderNo = formData.tenderNo ? String(formData.tenderNo).trim() : "";
+    if (!tenderNo) {
+      setIsDbDuplicate(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const url = `/api/admin/tenders/check-number?tenderNo=${encodeURIComponent(tenderNo)}${editingTenderId ? `&excludeId=${editingTenderId}` : ""}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          setIsDbDuplicate(data.exists);
+        }
+      } catch (err) {
+        console.error("Check number error:", err);
+      }
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [formData.tenderNo, editingTenderId]);
+
+  const isLocalDuplicate = Boolean(
+    formData.tenderNo &&
+    tenders.some(
+      (t: any) =>
+        t.tenderNo?.trim().toUpperCase() === String(formData.tenderNo).trim().toUpperCase() &&
+        t._id !== editingTenderId
+    )
+  );
+
+  const isTenderNoDuplicate = isDbDuplicate || isLocalDuplicate;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -262,7 +393,7 @@ export function TendersTab({ role }: { role: string }) {
         fetchTenders();
         // Reset form
         setFormData({
-          companies: [], tenderNo: "", departmentOrg: "", tenderLastDate: "", filed: "NO", bidClosingTime: "", location: "", officeDocuments: "", msePurchasePreference: "NO", category: "", contractPeriodYear: "", manpower: "", emdExemption: "NO", emdValue: "", turnoverExperienceExemption: "NO", bidValue: "", technicalStatus: "No Status", award: "NO",
+          companies: [], tenderNo: "", departmentOrg: "", tenderLastDate: "", filed: "NO", bidClosingTime: "", location: "", officeDocuments: "", msePurchasePreference: "NO", category: "", contractPeriodYear: "", manpower: "", emdExemption: "NO", emdValue: "", turnoverExperienceExemption: "NO", bidValue: "", technicalStatus: "No Status", award: "NO", assignedAdmin: "", assignedAdmins: [],
         });
       } else {
         const data = await res.json();
@@ -284,7 +415,8 @@ export function TendersTab({ role }: { role: string }) {
       (tender.tenderNo && tender.tenderNo.toLowerCase().includes(searchLower)) ||
       (tender.departmentOrg && tender.departmentOrg.toLowerCase().includes(searchLower)) ||
       (tender.companies && tender.companies.join(" ").toLowerCase().includes(searchLower)) ||
-      (tender.createdBy?.username && tender.createdBy.username.toLowerCase().includes(searchLower));
+      (tender.createdBy?.username && tender.createdBy.username.toLowerCase().includes(searchLower)) ||
+      (tender.assignedAdmin?.username && tender.assignedAdmin.username.toLowerCase().includes(searchLower));
 
     // Filters
     const matchesFiled = filterFiled === "ALL" || tender.filed === filterFiled;
@@ -398,7 +530,7 @@ export function TendersTab({ role }: { role: string }) {
             </div>
             <div><label className="block text-sm">DEPARTMENT/ORG</label><input required name="departmentOrg" value={formData.departmentOrg} onChange={handleChange} className="w-full border p-2 rounded" /></div>
             <div><label className="block text-sm">TENDER LAST DATE</label><input type="date" required name="tenderLastDate" value={formData.tenderLastDate} onChange={handleChange} className="w-full border p-2 rounded" /></div>
-            <div><label className="block text-sm">FILED</label><select name="filed" value={formData.filed} onChange={handleChange} className="w-full border p-2 rounded"><option value="YES">YES</option><option value="NO">NO</option></select></div>
+            <div><label className="block text-sm">FILED</label><select name="filed" value={formData.filed || "NO"} onChange={handleChange} className="w-full border p-2 rounded"><option value="NO">NO</option><option value="YES">YES</option></select></div>
             <div><label className="block text-sm">BID CLOSING TIME</label><input type="time" required name="bidClosingTime" value={formData.bidClosingTime} onChange={handleChange} className="w-full border p-2 rounded" /></div>
             <div><label className="block text-sm">LOCATION</label><input required name="location" value={formData.location} onChange={handleChange} className="w-full border p-2 rounded" /></div>
             <div><label className="block text-sm">OFFICE/DOCUMENTS</label><input required name="officeDocuments" value={formData.officeDocuments} onChange={handleChange} className="w-full border p-2 rounded" /></div>
@@ -424,6 +556,34 @@ export function TendersTab({ role }: { role: string }) {
             )}
             <div><label className="block text-sm">TURNOVER/EXPERIENCE EXEMPTION</label><select name="turnoverExperienceExemption" value={formData.turnoverExperienceExemption} onChange={handleChange} className="w-full border p-2 rounded"><option value="YES">YES</option><option value="NO">NO</option></select></div>
             <div><label className="block text-sm">BID VALUE</label><input required name="bidValue" value={formData.bidValue} onChange={handleChange} className="w-full border p-2 rounded" /></div>
+            
+            {role === 'superadmin' && (
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold mb-2">ACCESS TENDER (ASSIGN ADMINS)</label>
+                <div className="flex flex-wrap gap-2">
+                  {adminsList.map((a: any) => {
+                    const isSelected = (formData.assignedAdmins || []).includes(a._id);
+                    return (
+                      <button
+                        key={a._id}
+                        type="button"
+                        onClick={() => toggleAdminInForm(a._id)}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
+                          isSelected
+                            ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                            : "bg-white text-slate-700 border-slate-300 hover:border-slate-400"
+                        }`}
+                      >
+                        {isSelected ? "✓ " : "+ "}{a.username}
+                      </button>
+                    );
+                  })}
+                  {adminsList.length === 0 && (
+                    <span className="text-xs text-slate-400">No admins available</span>
+                  )}
+                </div>
+              </div>
+            )}
             
             <div className="md:col-span-2 flex justify-end">
               <button type="submit" className="bg-slate-900 text-white px-6 py-2 rounded hover:bg-slate-800">
@@ -560,6 +720,7 @@ export function TendersTab({ role }: { role: string }) {
         <table className="min-w-full divide-y divide-slate-200">
           <thead className="bg-slate-50">
             <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Sr No.</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Company Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tender No</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Department</th>
@@ -579,12 +740,14 @@ export function TendersTab({ role }: { role: string }) {
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Technical Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Bid Award</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Created By</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Access Tender</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-slate-200">
-            {filteredTenders.map((tender) => (
+            {filteredTenders.map((tender, index) => (
               <tr key={tender._id}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-medium">{index + 1}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 uppercase">
                   {tender.companies && tender.companies.length > 0 ? (
                     tender.companies.map((c: string) => (
@@ -603,8 +766,8 @@ export function TendersTab({ role }: { role: string }) {
                     onChange={(e) => handleFiledChange(tender._id, e.target.value)}
                     className="border p-1 rounded bg-slate-50 uppercase"
                   >
-                    <option value="YES">YES</option>
                     <option value="NO">NO</option>
+                    <option value="YES">YES</option>
                   </select>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 uppercase">{tender.bidClosingTime}</td>
@@ -641,6 +804,98 @@ export function TendersTab({ role }: { role: string }) {
                   </select>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{tender.createdBy?.username || "Unknown"}</td>
+                <td className="px-6 py-4 text-sm text-slate-500">
+                  {role === 'superadmin' ? (
+                    <div className="relative inline-block text-left">
+                      <div className="flex flex-wrap items-center gap-1.5 min-w-[140px]">
+                        {getAssignedAdminsList(tender).map((a: any) => (
+                          <span
+                            key={a._id}
+                            className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full text-xs font-medium"
+                          >
+                            {a.username}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleAdminInTable(tender, a._id);
+                              }}
+                              className="text-blue-500 hover:text-red-600 rounded-full"
+                              title={`Remove ${a.username}`}
+                            >
+                              <X size={12} />
+                            </button>
+                          </span>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => setOpenAccessPopover(openAccessPopover === tender._id ? null : tender._id)}
+                          className="px-2 py-0.5 text-xs font-medium border border-dashed border-slate-300 hover:border-slate-400 text-slate-600 hover:text-slate-900 rounded bg-white hover:bg-slate-50 flex items-center gap-1"
+                        >
+                          <Plus size={12} /> {getAssignedAdminIds(tender).length === 0 ? "Assign Admins" : "Add"}
+                        </button>
+                      </div>
+
+                      {openAccessPopover === tender._id && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-20"
+                            onClick={() => setOpenAccessPopover(null)}
+                          />
+                          <div className="absolute right-0 sm:left-0 mt-2 w-56 bg-white border border-slate-200 rounded-lg shadow-xl p-3 z-30 space-y-2">
+                            <div className="flex items-center justify-between pb-1.5 border-b border-slate-100">
+                              <span className="text-xs font-semibold text-slate-700">Assign Admins</span>
+                              <button
+                                type="button"
+                                onClick={() => setOpenAccessPopover(null)}
+                                className="text-slate-400 hover:text-slate-600"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                            <div className="max-h-48 overflow-y-auto space-y-1">
+                              {adminsList.map((a: any) => {
+                                const isChecked = getAssignedAdminIds(tender).includes(a._id);
+                                return (
+                                  <label
+                                    key={a._id}
+                                    className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-50 cursor-pointer text-xs text-slate-700"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={() => handleToggleAdminInTable(tender, a._id)}
+                                      className="rounded border-slate-300 text-slate-900 focus:ring-0 h-3.5 w-3.5"
+                                    />
+                                    <span className="font-medium">{a.username}</span>
+                                  </label>
+                                );
+                              })}
+                              {adminsList.length === 0 && (
+                                <p className="text-xs text-slate-400 py-2 text-center">No admins available</p>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-1">
+                      {getAssignedAdminsList(tender).length > 0 ? (
+                        getAssignedAdminsList(tender).map((a: any) => (
+                          <span
+                            key={a._id}
+                            className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full text-xs font-medium"
+                          >
+                            {a.username}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-xs text-slate-400">-</span>
+                      )}
+                    </div>
+                  )}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                   <div className="flex gap-2">
                     <button 
@@ -663,7 +918,7 @@ export function TendersTab({ role }: { role: string }) {
             ))}
             {filteredTenders.length === 0 && (
               <tr>
-                <td colSpan={20} className="px-6 py-4 text-center text-sm text-slate-500">No tenders found matching filters</td>
+                <td colSpan={22} className="px-6 py-4 text-center text-sm text-slate-500">No tenders found matching filters</td>
               </tr>
             )}
           </tbody>
