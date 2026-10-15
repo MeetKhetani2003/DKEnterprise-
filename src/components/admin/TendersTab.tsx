@@ -17,7 +17,7 @@ export function TendersTab({ role }: { role: string }) {
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterFiled, setFilterFiled] = useState("ALL");
+  const [filterFiled, setFilterFiled] = useState("NO");
   const [filterCompany, setFilterCompany] = useState("ALL");
   const [filterTechnicalStatus, setFilterTechnicalStatus] = useState("ALL");
   const [filterAward, setFilterAward] = useState("ALL");
@@ -542,7 +542,8 @@ export function TendersTab({ role }: { role: string }) {
       (tender.assignedAdmin?.username && tender.assignedAdmin.username.toLowerCase().includes(searchLower));
 
     // Filters
-    const matchesFiled = filterFiled === "ALL" || tender.filed === filterFiled;
+    const tenderFiled = tender.filed ? String(tender.filed).toUpperCase() : "NO";
+    const matchesFiled = filterFiled === "ALL" || tenderFiled === filterFiled;
     const matchesCompany = filterCompany === "ALL" || (tender.companies && tender.companies.includes(filterCompany));
     const matchesTechStatus = filterTechnicalStatus === "ALL" || tender.technicalStatus === filterTechnicalStatus || (!tender.technicalStatus && filterTechnicalStatus === "No Status");
     const matchesAward = filterAward === "ALL" || tender.award === filterAward;
@@ -823,7 +824,7 @@ export function TendersTab({ role }: { role: string }) {
           <button
             onClick={() => {
               setSearchQuery("");
-              setFilterFiled("ALL");
+              setFilterFiled("NO");
               setFilterCompany("ALL");
               setFilterTechnicalStatus("ALL");
               setFilterAward("ALL");
