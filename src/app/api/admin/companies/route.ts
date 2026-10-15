@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongoose";
 import Company from "@/lib/models/Company";
@@ -11,8 +13,13 @@ export async function GET(req: Request) {
     }
 
     await dbConnect();
-    const companies = await Company.find({}).sort({ name: 1 });
-    return NextResponse.json(companies);
+    const companies = await Company.find({}).sort({ name: 1 }).lean();
+    return NextResponse.json(companies, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+      },
+    });
   } catch (error) {
     console.error("Fetch companies error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });

@@ -1,5 +1,7 @@
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 import dbConnect from "@/lib/mongoose";
 import Tender from "@/lib/models/Tender";
 import User from "@/lib/models/User";
@@ -14,25 +16,40 @@ export async function GET(req: Request) {
 
     await dbConnect();
     
+    const userObjectId = mongoose.Types.ObjectId.isValid(user.id)
+      ? new mongoose.Types.ObjectId(user.id)
+      : null;
+
     const query: any = user.role === "superadmin" 
       ? { isDeleted: { $ne: true } } 
       : { 
           isDeleted: { $ne: true }, 
           $or: [
+            ...(userObjectId ? [
+              { createdBy: userObjectId },
+              { assignedAdmins: userObjectId },
+              { assignedAdmin: userObjectId },
+            ] : []),
             { createdBy: user.id },
             { assignedAdmins: user.id },
             { assignedAdmin: user.id }
           ] 
         };
     
-    // Fetch and populate createdBy, assignedAdmin, and assignedAdmins
+    // Fetch and populate createdBy, assignedAdmin, and assignedAdmins with lean() for fast serialization
     const tenders = await Tender.find(query)
       .populate({ path: "createdBy", select: "username role", strictPopulate: false })
       .populate({ path: "assignedAdmin", select: "username role", strictPopulate: false })
       .populate({ path: "assignedAdmins", select: "username role", strictPopulate: false })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
-    return NextResponse.json(tenders);
+    return NextResponse.json(tenders, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+      },
+    });
   } catch (error) {
     console.error("Fetch tenders error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });

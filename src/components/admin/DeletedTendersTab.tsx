@@ -13,15 +13,25 @@ export function DeletedTendersTab({ role }: { role: string }) {
     fetchDeletedTenders();
   }, []);
 
-  const fetchDeletedTenders = async () => {
+  const fetchDeletedTenders = async (retry = 0) => {
     try {
-      const res = await fetch("/api/admin/tenders/deleted");
+      const res = await fetch("/api/admin/tenders/deleted", {
+        cache: "no-store",
+        headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+      });
       if (res.ok) {
         const data = await res.json();
-        setTenders(data);
+        setTenders(Array.isArray(data) ? data : []);
+      } else if (retry < 2) {
+        setTimeout(() => fetchDeletedTenders(retry + 1), 800);
+        return;
       }
     } catch (error) {
       console.error("Failed to fetch deleted tenders", error);
+      if (retry < 2) {
+        setTimeout(() => fetchDeletedTenders(retry + 1), 800);
+        return;
+      }
     } finally {
       setLoading(false);
     }
@@ -44,7 +54,18 @@ export function DeletedTendersTab({ role }: { role: string }) {
     }
   };
 
-  if (loading) return <div>Loading deleted tenders...</div>;
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 space-y-4 animate-pulse">
+        <div className="h-6 w-48 bg-slate-200 rounded"></div>
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-10 bg-slate-100 rounded w-full"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">

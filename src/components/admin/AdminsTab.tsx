@@ -21,15 +21,25 @@ export function AdminsTab() {
     fetchAdmins();
   }, []);
 
-  const fetchAdmins = async () => {
+  const fetchAdmins = async (retry = 0) => {
     try {
-      const res = await fetch("/api/admin/users");
+      const res = await fetch("/api/admin/users", {
+        cache: "no-store",
+        headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+      });
       if (res.ok) {
         const data = await res.json();
-        setAdmins(data);
+        setAdmins(Array.isArray(data) ? data : []);
+      } else if (retry < 2) {
+        setTimeout(() => fetchAdmins(retry + 1), 800);
+        return;
       }
     } catch (error) {
       console.error("Failed to fetch admins", error);
+      if (retry < 2) {
+        setTimeout(() => fetchAdmins(retry + 1), 800);
+        return;
+      }
     } finally {
       setLoading(false);
     }
@@ -96,7 +106,18 @@ export function AdminsTab() {
     }
   };
 
-  if (loading) return <div>Loading admins...</div>;
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 space-y-4 animate-pulse">
+        <div className="h-6 w-48 bg-slate-200 rounded"></div>
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-10 bg-slate-100 rounded w-full"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">

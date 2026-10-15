@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { FileSpreadsheet, CheckCircle, XCircle, Trophy, IndianRupee, Download, Files } from "lucide-react";
+import { FileSpreadsheet, CheckCircle, XCircle, Trophy, IndianRupee, Download, Files, RefreshCw, AlertCircle } from "lucide-react";
 
 const COLORS = ["#10b981", "#ef4444", "#f59e0b", "#64748b"]; // emerald, red, amber, slate
 
@@ -10,55 +10,167 @@ export function DashboardTab() {
   const [tenders, setTenders] = useState<any[]>([]);
   const [companies, setCompanies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
   const [filterCompany, setFilterCompany] = useState("ALL");
 
   useEffect(() => {
-    fetchTenders();
-    fetchCompanies();
+    fetchDashboardData();
   }, []);
 
-  const fetchTenders = async () => {
-    try {
-      const res = await fetch("/api/admin/tenders");
-      if (res.ok) {
-        const data = await res.json();
-        setTenders(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch tenders", error);
-    } finally {
-      setLoading(false);
+  const fetchDashboardData = async (isManualRefresh = false) => {
+    if (isManualRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
     }
+    setError(null);
+
+    const maxRetries = 2;
+    let attempt = 0;
+    let success = false;
+
+    while (attempt <= maxRetries && !success) {
+      try {
+        const [tendersRes, companiesRes] = await Promise.all([
+          fetch("/api/admin/tenders", {
+            cache: "no-store",
+            headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+          }),
+          fetch("/api/admin/companies", {
+            cache: "no-store",
+            headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+          }),
+        ]);
+
+        if (!tendersRes.ok) {
+          throw new Error(`Failed to fetch tenders (HTTP ${tendersRes.status})`);
+        }
+        if (!companiesRes.ok) {
+          throw new Error(`Failed to fetch companies (HTTP ${companiesRes.status})`);
+        }
+
+        const tendersData = await tendersRes.json();
+        const companiesData = await companiesRes.json();
+
+        setTenders(Array.isArray(tendersData) ? tendersData : []);
+        setCompanies(Array.isArray(companiesData) ? companiesData : []);
+        setError(null);
+        success = true;
+      } catch (err: any) {
+        console.error(`Fetch attempt ${attempt + 1} failed:`, err);
+        attempt++;
+        if (attempt <= maxRetries) {
+          // Wait briefly before retrying to allow serverless connection to warm up
+          await new Promise((res) => setTimeout(res, 800 * attempt));
+        } else {
+          setError(err?.message || "Failed to load dashboard data from live server. Please retry.");
+        }
+      }
+    }
+
+    setLoading(false);
+    setRefreshing(false);
   };
 
-  const fetchCompanies = async () => {
-    try {
-      const res = await fetch("/api/admin/companies");
-      if (res.ok) {
-        const data = await res.json();
-        setCompanies(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch companies", error);
-    }
-  };
+  if (loading) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        {/* Loading Header indicator */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <RefreshCw className="h-5 w-5 text-blue-600 animate-spin" />
+            <div>
+              <p className="text-sm font-semibold text-slate-800">Loading live dashboard data...</p>
+              <p className="text-xs text-slate-500">Fetching latest tenders and company analytics</p>
+            </div>
+          </div>
+          <div className="h-8 w-24 bg-slate-200 rounded-lg"></div>
+        </div>
 
-  if (loading) return <div className="text-slate-500">Loading dashboard...</div>;
+        {/* Skeleton Filter Bar */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-wrap gap-4 items-end">
+          <div className="w-56 space-y-2">
+            <div className="h-3 w-20 bg-slate-200 rounded"></div>
+            <div className="h-9 w-full bg-slate-100 rounded"></div>
+          </div>
+          <div className="w-44 space-y-2">
+            <div className="h-3 w-28 bg-slate-200 rounded"></div>
+            <div className="h-9 w-full bg-slate-100 rounded"></div>
+          </div>
+          <div className="w-44 space-y-2">
+            <div className="h-3 w-28 bg-slate-200 rounded"></div>
+            <div className="h-9 w-full bg-slate-100 rounded"></div>
+          </div>
+          <div className="flex gap-2 ml-auto">
+            <div className="h-9 w-24 bg-slate-200 rounded"></div>
+            <div className="h-9 w-28 bg-slate-200 rounded"></div>
+          </div>
+        </div>
+
+        {/* Skeleton Stats Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div key={i} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex items-center gap-4">
+              <div className="h-12 w-12 rounded-full bg-slate-200"></div>
+              <div className="space-y-2 flex-1">
+                <div className="h-3 w-24 bg-slate-200 rounded"></div>
+                <div className="h-6 w-16 bg-slate-300 rounded"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Skeleton Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
+            <div className="h-4 w-40 bg-slate-200 rounded"></div>
+            <div className="h-72 bg-slate-100 rounded-lg flex items-center justify-center">
+              <div className="h-32 w-3/4 bg-slate-200/60 rounded"></div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
+            <div className="h-4 w-48 bg-slate-200 rounded"></div>
+            <div className="h-72 bg-slate-100 rounded-lg flex items-center justify-center">
+              <div className="h-40 w-40 rounded-full bg-slate-200/60"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Skeleton Table */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-200">
+            <div className="h-4 w-32 bg-slate-200 rounded"></div>
+          </div>
+          <div className="p-6 space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-8 bg-slate-100 rounded w-full"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Filter tenders by date and company
-  const filteredTenders = tenders.filter(tender => {
+  const filteredTenders = tenders.filter((tender) => {
     const tenderDate = tender.tenderLastDate ? new Date(tender.tenderLastDate).getTime() : 0;
     const matchesStartDate = !filterStartDate || tenderDate >= new Date(filterStartDate).getTime();
     const matchesEndDate = !filterEndDate || tenderDate <= new Date(filterEndDate).getTime();
-    const matchesCompany = filterCompany === "ALL" || (tender.companies && (Array.isArray(tender.companies) ? tender.companies.includes(filterCompany) : tender.companies === filterCompany));
+    const matchesCompany =
+      filterCompany === "ALL" ||
+      (tender.companies &&
+        (Array.isArray(tender.companies)
+          ? tender.companies.includes(filterCompany)
+          : tender.companies === filterCompany));
     return matchesStartDate && matchesEndDate && matchesCompany;
   });
 
   // Calculate stats
   const totalTenders = filteredTenders.length;
-  const totalFiledTenders = filteredTenders.filter(t => t.filed === "YES").length;
+  const totalFiledTenders = filteredTenders.filter((t) => t.filed === "YES").length;
   const activeTenders = Math.max(0, totalTenders - totalFiledTenders);
   const overallTotal = filteredTenders.length;
 
@@ -67,7 +179,7 @@ export function DashboardTab() {
       alert("No data to export");
       return;
     }
-    
+
     // Define headers
     const headers = [
       "Companies",
@@ -92,57 +204,57 @@ export function DashboardTab() {
       "Delete Reason",
       "Created At"
     ];
-    
+
     // Create rows
-    const rows = filteredTenders.map(t => [
-      `"${(Array.isArray(t.companies) ? t.companies.join(", ") : t.companies || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.tenderNo || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.departmentOrg || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.tenderLastDate || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.bidClosingTime || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.location || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.category || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.contractPeriodYear || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.manpower || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.bidValue || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.filed || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.technicalStatus || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.award || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.emdValue || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.emdExemption || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.msePurchasePreference || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.turnoverExperienceExemption || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.officeDocuments || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.isDeleted || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.deleteReason || '').toString().replace(/"/g, '""')}"`,
-      `"${(t.createdAt ? new Date(t.createdAt).toLocaleString() : '').toString().replace(/"/g, '""')}"`
+    const rows = filteredTenders.map((t) => [
+      `"${(Array.isArray(t.companies) ? t.companies.join(", ") : t.companies || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.tenderNo || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.departmentOrg || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.tenderLastDate || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.bidClosingTime || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.location || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.category || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.contractPeriodYear || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.manpower || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.bidValue || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.filed || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.technicalStatus || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.award || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.emdValue || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.emdExemption || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.msePurchasePreference || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.turnoverExperienceExemption || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.officeDocuments || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.isDeleted || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.deleteReason || "").toString().replace(/"/g, '""')}"`,
+      `"${(t.createdAt ? new Date(t.createdAt).toLocaleString() : "").toString().replace(/"/g, '""')}"`
     ]);
-    
-    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `tenders_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `tenders_export_${new Date().toISOString().split("T")[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const qualified = filteredTenders.filter(t => t.technicalStatus === "Qualify").length;
-  const disqualified = filteredTenders.filter(t => t.technicalStatus === "Disqualify").length;
-  const canceled = filteredTenders.filter(t => t.technicalStatus === "Canceled Bid").length;
-  const noStatus = filteredTenders.filter(t => !t.technicalStatus || t.technicalStatus === "No Status").length;
+  const qualified = filteredTenders.filter((t) => t.technicalStatus === "Qualify").length;
+  const disqualified = filteredTenders.filter((t) => t.technicalStatus === "Disqualify").length;
+  const canceled = filteredTenders.filter((t) => t.technicalStatus === "Canceled Bid").length;
+  const noStatus = filteredTenders.filter((t) => !t.technicalStatus || t.technicalStatus === "No Status").length;
 
-  const achieved = filteredTenders.filter(t => t.award === "YES").length;
+  const achieved = filteredTenders.filter((t) => t.award === "YES").length;
 
   const qualifiedRatio = overallTotal > 0 ? ((qualified / overallTotal) * 100).toFixed(1) : "0.0";
   const disqualifiedRatio = overallTotal > 0 ? ((disqualified / overallTotal) * 100).toFixed(1) : "0.0";
 
   const totalEmdValue = filteredTenders.reduce((acc, curr) => {
     if (curr.emdExemption === "YES" && curr.emdValue) {
-      const val = parseFloat(String(curr.emdValue).replace(/,/g, ''));
+      const val = parseFloat(String(curr.emdValue).replace(/,/g, ""));
       if (!isNaN(val)) {
         return acc + val;
       }
@@ -150,23 +262,27 @@ export function DashboardTab() {
     return acc;
   }, 0);
 
-  const formattedEmd = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(totalEmdValue);
+  const formattedEmd = new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(totalEmdValue);
 
   const pieData = [
     { name: "Qualified", value: qualified },
     { name: "Disqualified", value: disqualified },
     { name: "Canceled", value: canceled },
     { name: "No Status", value: noStatus },
-  ].filter(d => d.value > 0);
+  ].filter((d) => d.value > 0);
 
   // Group by month for BarChart (using tenderLastDate)
-  const monthDataMap: { [key: string]: { month: string, Total: number, Qualified: number, Achieved: number } } = {};
+  const monthDataMap: { [key: string]: { month: string; Total: number; Qualified: number; Achieved: number } } = {};
 
-  filteredTenders.forEach(t => {
+  filteredTenders.forEach((t) => {
     if (t.tenderLastDate) {
       const date = new Date(t.tenderLastDate);
       if (!isNaN(date.getTime())) {
-        const monthYear = date.toLocaleDateString('default', { month: 'short', year: 'numeric' });
+        const monthYear = date.toLocaleDateString("default", { month: "short", year: "numeric" });
         if (!monthDataMap[monthYear]) {
           monthDataMap[monthYear] = { month: monthYear, Total: 0, Qualified: 0, Achieved: 0 };
         }
@@ -183,7 +299,27 @@ export function DashboardTab() {
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
+      {/* Error Banner with Retry */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center justify-between text-red-800">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold">{error}</p>
+              <p className="text-xs text-red-600 mt-0.5">Could not fetch data from the server. Click retry to reconnect.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => fetchDashboardData(true)}
+            className="px-3 py-1.5 text-xs font-semibold bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-1.5 shadow-sm"
+          >
+            <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} />
+            Retry Now
+          </button>
+        </div>
+      )}
+
+      {/* Filters & Actions Toolbar */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-wrap gap-4 items-end">
         <div>
           <label className="block text-xs font-semibold text-slate-500 mb-1">Company</label>
@@ -193,7 +329,7 @@ export function DashboardTab() {
             className="w-full min-w-[200px] border border-slate-300 p-2 rounded text-sm bg-white"
           >
             <option value="ALL">All Companies</option>
-            {companies.map(c => (
+            {companies.map((c) => (
               <option key={c._id} value={c.name}>{c.name}</option>
             ))}
           </select>
@@ -216,21 +352,31 @@ export function DashboardTab() {
             className="w-full border border-slate-300 p-2 rounded text-sm bg-white"
           />
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 ml-auto flex-wrap">
           <button
             onClick={() => {
               setFilterCompany("ALL");
               setFilterStartDate("");
               setFilterEndDate("");
             }}
-            className="px-4 py-2 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300"
+            className="px-4 py-2 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium transition"
           >
             Clear Filters
+          </button>
+
+          <button
+            onClick={() => fetchDashboardData(true)}
+            disabled={refreshing}
+            className="px-4 py-2 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg flex items-center gap-2 border border-slate-200 font-medium transition disabled:opacity-50"
+            title="Reload latest data from database"
+          >
+            <RefreshCw size={15} className={refreshing ? "animate-spin text-primary" : "text-slate-500"} />
+            {refreshing ? "Refreshing..." : "Refresh"}
           </button>
           
           <button
             onClick={exportToCSV}
-            className="px-4 py-2 text-sm bg-emerald-600 text-white rounded hover:bg-emerald-700 flex items-center gap-2 shadow-sm shadow-emerald-600/20"
+            className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-2 shadow-sm shadow-emerald-600/20 font-medium transition"
           >
             <Download size={16} />
             Export Data

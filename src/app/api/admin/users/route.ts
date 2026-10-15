@@ -1,10 +1,12 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongoose";
 import User from "@/lib/models/User";
 import bcrypt from "bcryptjs";
 import { getUserFromCookie } from "@/lib/auth";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const user = getUserFromCookie();
     if (!user || user.role !== "superadmin") {
@@ -12,8 +14,13 @@ export async function GET() {
     }
 
     await dbConnect();
-    const users = await User.find({ role: "admin" }).select("-password");
-    return NextResponse.json(users);
+    const users = await User.find({ role: "admin" }).select("-password").lean();
+    return NextResponse.json(users, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+      },
+    });
   } catch (error) {
     console.error("Fetch users error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });

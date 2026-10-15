@@ -85,7 +85,10 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     try {
-      const meRes = await fetch("/api/admin/me");
+      const meRes = await fetch("/api/admin/me", {
+        cache: "no-store",
+        headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+      });
       if (meRes.ok) {
         const meData = await meRes.json();
         setIsAuthenticated(true);
@@ -93,21 +96,30 @@ export default function AdminDashboard() {
         setUsername(meData.username);
         setHasEInvoiceAccess(meData.hasEInvoiceAccess || false);
         setHasLeadAccess(meData.hasLeadAccess || false);
-      }
 
-      const [careersRes, contactsRes] = await Promise.all([
-        fetch("/api/admin/careers"),
-        fetch("/api/admin/contacts"),
-      ]);
+        // Fetch protected data only after confirming authentication
+        const [careersRes, contactsRes] = await Promise.all([
+          fetch("/api/admin/careers", {
+            cache: "no-store",
+            headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+          }),
+          fetch("/api/admin/contacts", {
+            cache: "no-store",
+            headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+          }),
+        ]);
 
-      if (careersRes.ok) {
-        const careersData = await careersRes.json();
-        setCareerApplications(careersData);
-      }
+        if (careersRes.ok) {
+          const careersData = await careersRes.json();
+          setCareerApplications(careersData);
+        }
 
-      if (contactsRes.ok) {
-        const contactsData = await contactsRes.json();
-        setContactEnquiries(contactsData);
+        if (contactsRes.ok) {
+          const contactsData = await contactsRes.json();
+          setContactEnquiries(contactsData);
+        }
+      } else {
+        setIsAuthenticated(false);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -192,6 +204,7 @@ export default function AdminDashboard() {
           setUsername(uname);
           setHasEInvoiceAccess(einvoiceAccess);
           setHasLeadAccess(leadAccess || false);
+          fetchData();
         }}
       />
     );

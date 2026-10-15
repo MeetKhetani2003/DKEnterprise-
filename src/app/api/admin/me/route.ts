@@ -4,6 +4,7 @@ import User from "@/lib/models/User";
 import { getUserFromCookie } from "@/lib/auth";
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET(req: Request) {
   try {
@@ -13,7 +14,7 @@ export async function GET(req: Request) {
     }
 
     await dbConnect();
-    const user = await User.findById(session.id);
+    const user = await User.findById(session.id).lean();
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 401 });
     }
@@ -22,7 +23,12 @@ export async function GET(req: Request) {
       role: user.role, 
       username: user.username, 
       hasEInvoiceAccess: user.hasEInvoiceAccess,
-      hasLeadAccess: user.hasLeadAccess // we might need this soon
+      hasLeadAccess: user.hasLeadAccess
+    }, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+      },
     });
   } catch (error) {
     console.error("Auth check error:", error);

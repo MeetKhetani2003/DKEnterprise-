@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongoose";
 import Tender from "@/lib/models/Tender";
@@ -15,9 +17,17 @@ export async function GET(req: Request) {
     
     const query: any = user.role === "superadmin" ? { isDeleted: true } : { createdBy: user.id, isDeleted: true };
     
-    const tenders = await Tender.find(query).populate("deletedBy", "username role").sort({ deletedAt: -1 });
+    const tenders = await Tender.find(query)
+      .populate("deletedBy", "username role")
+      .sort({ deletedAt: -1 })
+      .lean();
 
-    return NextResponse.json(tenders);
+    return NextResponse.json(tenders, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+      },
+    });
   } catch (error) {
     console.error("Fetch deleted tenders error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });

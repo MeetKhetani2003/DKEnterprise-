@@ -105,15 +105,25 @@ export function LeadsTab({ role }: { role: string }) {
     fetchLeads();
   }, []);
 
-  const fetchLeads = async () => {
+  const fetchLeads = async (retry = 0) => {
     try {
-      const res = await fetch("/api/admin/leads");
+      const res = await fetch("/api/admin/leads", {
+        cache: "no-store",
+        headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+      });
       if (res.ok) {
         const data = await res.json();
-        setLeads(data);
+        setLeads(Array.isArray(data) ? data : []);
+      } else if (retry < 2) {
+        setTimeout(() => fetchLeads(retry + 1), 800);
+        return;
       }
     } catch (error) {
       console.error("Failed to fetch leads", error);
+      if (retry < 2) {
+        setTimeout(() => fetchLeads(retry + 1), 800);
+        return;
+      }
     } finally {
       setLoading(false);
     }
@@ -243,7 +253,29 @@ export function LeadsTab({ role }: { role: string }) {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
   };
 
-  if (loading) return <div className="p-8 text-center text-zinc-500">Loading leads...</div>;
+  if (loading) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 flex justify-between items-center">
+          <div className="h-6 w-40 bg-slate-200 rounded"></div>
+          <div className="h-9 w-32 bg-slate-200 rounded-lg"></div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white p-4 rounded-xl border border-slate-200 space-y-2">
+              <div className="h-3 w-20 bg-slate-200 rounded"></div>
+              <div className="h-6 w-12 bg-slate-300 rounded"></div>
+            </div>
+          ))}
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 space-y-3">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-10 bg-slate-100 rounded w-full"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const totalOps = leads.length;
   const wonOps = leads.filter(l => l.stage?.toLowerCase() === 'won').length;

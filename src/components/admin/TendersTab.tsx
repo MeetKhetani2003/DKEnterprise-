@@ -92,10 +92,13 @@ export function TendersTab({ role }: { role: string }) {
 
   const fetchAdmins = async () => {
     try {
-      const res = await fetch("/api/admin/users");
+      const res = await fetch("/api/admin/users", {
+        cache: "no-store",
+        headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+      });
       if (res.ok) {
         const data = await res.json();
-        setAdminsList(data);
+        setAdminsList(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error("Failed to fetch admins", error);
@@ -104,10 +107,13 @@ export function TendersTab({ role }: { role: string }) {
 
   const fetchCompanies = async () => {
     try {
-      const res = await fetch("/api/admin/companies");
+      const res = await fetch("/api/admin/companies", {
+        cache: "no-store",
+        headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+      });
       if (res.ok) {
         const data = await res.json();
-        setAvailableCompanies(data);
+        setAvailableCompanies(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error("Failed to fetch companies", error);
@@ -162,15 +168,25 @@ export function TendersTab({ role }: { role: string }) {
     }
   };
 
-  const fetchTenders = async () => {
+  const fetchTenders = async (retry = 0) => {
     try {
-      const res = await fetch("/api/admin/tenders");
+      const res = await fetch("/api/admin/tenders", {
+        cache: "no-store",
+        headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+      });
       if (res.ok) {
         const data = await res.json();
-        setTenders(data);
+        setTenders(Array.isArray(data) ? data : []);
+      } else if (retry < 2) {
+        setTimeout(() => fetchTenders(retry + 1), 800);
+        return;
       }
     } catch (error) {
       console.error("Failed to fetch tenders", error);
+      if (retry < 2) {
+        setTimeout(() => fetchTenders(retry + 1), 800);
+        return;
+      }
     } finally {
       setLoading(false);
     }
@@ -405,7 +421,26 @@ export function TendersTab({ role }: { role: string }) {
     }
   };
 
-  if (loading) return <div>Loading tenders...</div>;
+  if (loading) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 flex justify-between items-center">
+          <div className="h-6 w-48 bg-slate-200 rounded"></div>
+          <div className="h-9 w-32 bg-slate-200 rounded-lg"></div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 flex flex-wrap gap-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-9 w-40 bg-slate-100 rounded"></div>
+          ))}
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 space-y-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-10 bg-slate-100 rounded w-full"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   // Derived state for filtering and sorting
   const filteredTenders = tenders.filter(tender => {

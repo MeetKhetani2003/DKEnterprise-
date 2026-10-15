@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongoose";
 import Company from "@/lib/models/Company";

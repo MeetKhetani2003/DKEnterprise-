@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongoose";
 import Tender from "@/lib/models/Tender";
@@ -19,8 +21,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       return NextResponse.json({ message: "Tender not found" }, { status: 404 });
     }
 
-    const hasAccess = user.role === "superadmin" || 
-      tender.createdBy?.toString() === user.id || 
+    const hasAccess = user.role === "superadmin" ||
+      tender.createdBy?.toString() === user.id ||
       tender.assignedAdmin?.toString() === user.id ||
       (tender.assignedAdmins && tender.assignedAdmins.some((a: any) => (a._id || a).toString() === user.id));
 
@@ -55,7 +57,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       .populate({ path: "createdBy", select: "username role", strictPopulate: false })
       .populate({ path: "assignedAdmin", select: "username role", strictPopulate: false })
       .populate({ path: "assignedAdmins", select: "username role", strictPopulate: false });
-    
+
     return NextResponse.json({ message: "Tender updated successfully", tender: updatedTender });
   } catch (error) {
     console.error("Update tender error:", error);
@@ -69,7 +71,6 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
-
     await dbConnect();
     const data = await req.json();
 
@@ -78,8 +79,8 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
       return NextResponse.json({ message: "Tender not found" }, { status: 404 });
     }
 
-    const hasDeleteAccess = user.role === "superadmin" || 
-      tender.createdBy?.toString() === user.id || 
+    const hasDeleteAccess = user.role === "superadmin" ||
+      tender.createdBy?.toString() === user.id ||
       tender.assignedAdmin?.toString() === user.id ||
       (tender.assignedAdmins && tender.assignedAdmins.some((a: any) => (a._id || a).toString() === user.id));
 
@@ -91,9 +92,9 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     tender.deleteReason = data.reason || "";
     tender.deletedBy = user.id as any;
     tender.deletedAt = new Date();
-    
+
     await tender.save();
-    
+
     return NextResponse.json({ message: "Tender deleted successfully" });
   } catch (error) {
     console.error("Delete tender error:", error);
