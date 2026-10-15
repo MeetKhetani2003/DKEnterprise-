@@ -113,15 +113,22 @@ export function LeadsTab({ role }: { role: string }) {
       });
       if (res.ok) {
         const data = await res.json();
-        setLeads(Array.isArray(data) ? data : []);
-      } else if (retry < 2) {
-        setTimeout(() => fetchLeads(retry + 1), 800);
+        if (Array.isArray(data)) {
+          setLeads(data);
+          if (data.length > 0 || retry >= 5) {
+            setLoading(false);
+            return;
+          }
+        }
+      }
+      if (retry < 5) {
+        setTimeout(() => fetchLeads(retry + 1), 1500);
         return;
       }
     } catch (error) {
       console.error("Failed to fetch leads", error);
-      if (retry < 2) {
-        setTimeout(() => fetchLeads(retry + 1), 800);
+      if (retry < 5) {
+        setTimeout(() => fetchLeads(retry + 1), 1500);
         return;
       }
     } finally {

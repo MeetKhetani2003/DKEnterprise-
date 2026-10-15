@@ -8,7 +8,7 @@ export const revalidate = 0;
 
 export async function GET(req: Request) {
   try {
-    const session = getUserFromCookie();
+    const session = getUserFromCookie(req);
     if (!session) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }

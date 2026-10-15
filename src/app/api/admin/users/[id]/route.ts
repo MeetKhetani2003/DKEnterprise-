@@ -8,7 +8,7 @@ import { getUserFromCookie } from "@/lib/auth";
 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
-    const user = getUserFromCookie();
+    const user = getUserFromCookie(req);
     if (!user || user.role !== "superadmin") {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
@@ -47,7 +47,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
 export async function DELETE(req: Request, { params }: { params: { id: string } }) {
   try {
-    const user = getUserFromCookie();
+    const user = getUserFromCookie(req);
     if (!user || user.role !== "superadmin") {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }

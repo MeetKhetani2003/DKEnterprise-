@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, X, Trash2, Edit2 } from "lucide-react";
+import { Plus, X, Trash2, Edit2, RefreshCw } from "lucide-react";
 
 export function TendersTab({ role }: { role: string }) {
   const [tenders, setTenders] = useState<any[]>([]);
@@ -82,13 +82,112 @@ export function TendersTab({ role }: { role: string }) {
     return [];
   };
 
+  const [retryAttempt, setRetryAttempt] = useState(1);
+  const [isSyncing, setIsSyncing] = useState(false);
+
   useEffect(() => {
-    fetchTenders();
-    fetchCompanies();
-    if (role === "superadmin") {
-      fetchAdmins();
-    }
+    let isMounted = true;
+    let timer: NodeJS.Timeout | null = null;
+
+    const fetchAllData = async (attempt = 1) => {
+      if (!isMounted) return;
+      setIsSyncing(true);
+      setRetryAttempt(attempt);
+
+      try {
+        const [tendersRes, companiesRes] = await Promise.all([
+          fetch("/api/admin/tenders", {
+            cache: "no-store",
+            headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+          }),
+          fetch("/api/admin/companies", {
+            cache: "no-store",
+            headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+          }),
+        ]);
+
+        let gotTenders = false;
+
+        if (tendersRes.ok) {
+          const data = await tendersRes.json();
+          if (Array.isArray(data)) {
+            setTenders(data);
+            if (data.length > 0) {
+              gotTenders = true;
+            }
+          }
+        }
+
+        if (companiesRes.ok) {
+          const compData = await companiesRes.json();
+          if (Array.isArray(compData)) {
+            setAvailableCompanies(compData);
+          }
+        }
+
+        if (role === "superadmin") {
+          fetchAdmins();
+        }
+
+        if (gotTenders) {
+          setLoading(false);
+          setIsSyncing(false);
+          return;
+        }
+
+        // If not got data yet on first load, refetch automatically UNTIL get data
+        console.log(`[TendersTab] Attempt ${attempt}: 0 tenders loaded, refetching automatically...`);
+        const delay = attempt < 4 ? 1200 : 2000;
+        timer = setTimeout(() => {
+          if (isMounted) fetchAllData(attempt + 1);
+        }, delay);
+      } catch (error) {
+        console.error(`[TendersTab] Attempt ${attempt} failed, retrying...`, error);
+        timer = setTimeout(() => {
+          if (isMounted) fetchAllData(attempt + 1);
+        }, 2000);
+      }
+    };
+
+    fetchAllData(1);
+
+    return () => {
+      isMounted = false;
+      if (timer) clearTimeout(timer);
+    };
   }, [role]);
+
+  const refreshTenders = async () => {
+    setIsSyncing(true);
+    try {
+      const [tendersRes, companiesRes] = await Promise.all([
+        fetch("/api/admin/tenders", {
+          cache: "no-store",
+          headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+        }),
+        fetch("/api/admin/companies", {
+          cache: "no-store",
+          headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+        }),
+      ]);
+      if (tendersRes.ok) {
+        const data = await tendersRes.json();
+        if (Array.isArray(data)) setTenders(data);
+      }
+      if (companiesRes.ok) {
+        const compData = await companiesRes.json();
+        if (Array.isArray(compData)) setAvailableCompanies(compData);
+      }
+      if (role === "superadmin") fetchAdmins();
+    } catch (e) {
+      console.error("Refresh error:", e);
+    } finally {
+      setIsSyncing(false);
+      setLoading(false);
+    }
+  };
+
+  const fetchTenders = refreshTenders;
 
   const fetchAdmins = async () => {
     try {
@@ -165,30 +264,6 @@ export function TendersTab({ role }: { role: string }) {
       }
     } catch (error) {
       console.error("Failed to delete company", error);
-    }
-  };
-
-  const fetchTenders = async (retry = 0) => {
-    try {
-      const res = await fetch("/api/admin/tenders", {
-        cache: "no-store",
-        headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setTenders(Array.isArray(data) ? data : []);
-      } else if (retry < 2) {
-        setTimeout(() => fetchTenders(retry + 1), 800);
-        return;
-      }
-    } catch (error) {
-      console.error("Failed to fetch tenders", error);
-      if (retry < 2) {
-        setTimeout(() => fetchTenders(retry + 1), 800);
-        return;
-      }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -406,7 +481,7 @@ export function TendersTab({ role }: { role: string }) {
       if (res.ok) {
         setShowForm(false);
         setEditingTenderId(null);
-        fetchTenders();
+        refreshTenders();
         // Reset form
         setFormData({
           companies: [], tenderNo: "", departmentOrg: "", tenderLastDate: "", filed: "NO", bidClosingTime: "", location: "", officeDocuments: "", msePurchasePreference: "NO", category: "", contractPeriodYear: "", manpower: "", emdExemption: "NO", emdValue: "", turnoverExperienceExemption: "NO", bidValue: "", technicalStatus: "No Status", award: "NO", assignedAdmin: "", assignedAdmins: [],
@@ -424,9 +499,22 @@ export function TendersTab({ role }: { role: string }) {
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 flex justify-between items-center">
-          <div className="h-6 w-48 bg-slate-200 rounded"></div>
-          <div className="h-9 w-32 bg-slate-200 rounded-lg"></div>
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <RefreshCw className="h-5 w-5 text-primary animate-spin" />
+            <div>
+              <p className="text-sm font-semibold text-slate-800">
+                Loading live tenders data... {retryAttempt > 1 ? `(Connecting attempt ${retryAttempt})` : ""}
+              </p>
+              <p className="text-xs text-slate-500">Connecting to database and synchronizing latest tenders automatically</p>
+            </div>
+          </div>
+          <button
+            onClick={() => refreshTenders()}
+            className="px-3 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 font-medium flex items-center gap-1.5 transition"
+          >
+            <RefreshCw size={12} className={isSyncing ? "animate-spin" : ""} /> Retry Now
+          </button>
         </div>
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 flex flex-wrap gap-4">
           {[1, 2, 3, 4, 5].map((i) => (
@@ -731,7 +819,7 @@ export function TendersTab({ role }: { role: string }) {
             className="w-full border border-slate-300 p-2 rounded text-sm bg-white"
           />
         </div>
-        <div className="flex items-end">
+        <div className="flex items-end gap-2">
           <button
             onClick={() => {
               setSearchQuery("");
@@ -743,9 +831,18 @@ export function TendersTab({ role }: { role: string }) {
               setFilterStartDate("");
               setFilterEndDate("");
             }}
-            className="px-4 py-2 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 w-full md:w-auto"
+            className="px-4 py-2 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 w-full md:w-auto font-medium transition"
           >
             Clear Filters
+          </button>
+          <button
+            onClick={refreshTenders}
+            disabled={isSyncing}
+            className="px-4 py-2 text-sm bg-blue-50 text-blue-700 hover:bg-blue-100 rounded border border-blue-200 flex items-center gap-1.5 font-medium transition disabled:opacity-50"
+            title="Reload latest tenders from server"
+          >
+            <RefreshCw size={14} className={isSyncing ? "animate-spin text-blue-600" : ""} />
+            {isSyncing ? "Syncing..." : "Refresh"}
           </button>
         </div>
       </div>
@@ -953,7 +1050,27 @@ export function TendersTab({ role }: { role: string }) {
             ))}
             {filteredTenders.length === 0 && (
               <tr>
-                <td colSpan={22} className="px-6 py-4 text-center text-sm text-slate-500">No tenders found matching filters</td>
+                <td colSpan={22} className="px-6 py-8 text-center text-sm text-slate-500">
+                  {tenders.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-6 gap-2">
+                      <RefreshCw className="h-6 w-6 text-primary animate-spin" />
+                      <p className="font-semibold text-slate-800">
+                        Loading live tenders from server... {retryAttempt > 1 ? `(Attempt ${retryAttempt})` : ""}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Connecting to database and synchronizing records automatically...
+                      </p>
+                      <button
+                        onClick={() => refreshTenders()}
+                        className="mt-2 px-3 py-1 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded font-medium flex items-center gap-1.5"
+                      >
+                        <RefreshCw size={12} className={isSyncing ? "animate-spin" : ""} /> Force Refresh Now
+                      </button>
+                    </div>
+                  ) : (
+                    "No tenders found matching filters"
+                  )}
+                </td>
               </tr>
             )}
           </tbody>

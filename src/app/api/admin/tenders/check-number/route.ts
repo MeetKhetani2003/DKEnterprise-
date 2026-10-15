@@ -6,7 +6,7 @@ import { getUserFromCookie } from "@/lib/auth";
 
 export async function GET(req: Request) {
   try {
-    const user = getUserFromCookie();
+    const user = getUserFromCookie(req);
     if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }

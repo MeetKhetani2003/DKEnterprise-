@@ -16,23 +16,17 @@ export function DashboardTab() {
   const [filterEndDate, setFilterEndDate] = useState("");
   const [filterCompany, setFilterCompany] = useState("ALL");
 
+  const [retryAttempt, setRetryAttempt] = useState(1);
+
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    let isMounted = true;
+    let timer: NodeJS.Timeout | null = null;
 
-  const fetchDashboardData = async (isManualRefresh = false) => {
-    if (isManualRefresh) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-    }
-    setError(null);
+    const loadDashboard = async (attempt = 1) => {
+      if (!isMounted) return;
+      setRetryAttempt(attempt);
+      setError(null);
 
-    const maxRetries = 2;
-    let attempt = 0;
-    let success = false;
-
-    while (attempt <= maxRetries && !success) {
       try {
         const [tendersRes, companiesRes] = await Promise.all([
           fetch("/api/admin/tenders", {
@@ -45,34 +39,80 @@ export function DashboardTab() {
           }),
         ]);
 
-        if (!tendersRes.ok) {
-          throw new Error(`Failed to fetch tenders (HTTP ${tendersRes.status})`);
-        }
-        if (!companiesRes.ok) {
-          throw new Error(`Failed to fetch companies (HTTP ${companiesRes.status})`);
+        let gotData = false;
+
+        if (tendersRes.ok) {
+          const tendersData = await tendersRes.json();
+          if (Array.isArray(tendersData)) {
+            setTenders(tendersData);
+            if (tendersData.length > 0) {
+              gotData = true;
+            }
+          }
         }
 
-        const tendersData = await tendersRes.json();
-        const companiesData = await companiesRes.json();
+        if (companiesRes.ok) {
+          const companiesData = await companiesRes.json();
+          if (Array.isArray(companiesData)) {
+            setCompanies(companiesData);
+          }
+        }
 
-        setTenders(Array.isArray(tendersData) ? tendersData : []);
-        setCompanies(Array.isArray(companiesData) ? companiesData : []);
-        setError(null);
-        success = true;
+        if (gotData) {
+          setLoading(false);
+          setRefreshing(false);
+          return;
+        }
+
+        // If not got data on first load, refetch automatically until get data
+        console.log(`[DashboardTab] Attempt ${attempt}: 0 tenders loaded, refetching automatically...`);
+        const delay = attempt < 4 ? 1200 : 2000;
+        timer = setTimeout(() => {
+          if (isMounted) loadDashboard(attempt + 1);
+        }, delay);
       } catch (err: any) {
-        console.error(`Fetch attempt ${attempt + 1} failed:`, err);
-        attempt++;
-        if (attempt <= maxRetries) {
-          // Wait briefly before retrying to allow serverless connection to warm up
-          await new Promise((res) => setTimeout(res, 800 * attempt));
-        } else {
-          setError(err?.message || "Failed to load dashboard data from live server. Please retry.");
-        }
+        console.error(`[DashboardTab] Fetch error on attempt ${attempt}, retrying...`, err);
+        timer = setTimeout(() => {
+          if (isMounted) loadDashboard(attempt + 1);
+        }, 2000);
       }
-    }
+    };
 
-    setLoading(false);
-    setRefreshing(false);
+    loadDashboard(1);
+
+    return () => {
+      isMounted = false;
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
+
+  const handleManualRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const [tendersRes, companiesRes] = await Promise.all([
+        fetch("/api/admin/tenders", {
+          cache: "no-store",
+          headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+        }),
+        fetch("/api/admin/companies", {
+          cache: "no-store",
+          headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+        }),
+      ]);
+      if (tendersRes.ok) {
+        const t = await tendersRes.json();
+        if (Array.isArray(t)) setTenders(t);
+      }
+      if (companiesRes.ok) {
+        const c = await companiesRes.json();
+        if (Array.isArray(c)) setCompanies(c);
+      }
+    } catch (e) {
+      console.error("Manual refresh error:", e);
+    } finally {
+      setRefreshing(false);
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -83,8 +123,10 @@ export function DashboardTab() {
           <div className="flex items-center gap-3">
             <RefreshCw className="h-5 w-5 text-blue-600 animate-spin" />
             <div>
-              <p className="text-sm font-semibold text-slate-800">Loading live dashboard data...</p>
-              <p className="text-xs text-slate-500">Fetching latest tenders and company analytics</p>
+              <p className="text-sm font-semibold text-slate-800">
+                Loading live dashboard data... {retryAttempt > 1 ? `(Connecting attempt ${retryAttempt})` : ""}
+              </p>
+              <p className="text-xs text-slate-500">Connecting to database and synchronizing latest tenders</p>
             </div>
           </div>
           <div className="h-8 w-24 bg-slate-200 rounded-lg"></div>
@@ -310,7 +352,7 @@ export function DashboardTab() {
             </div>
           </div>
           <button
-            onClick={() => fetchDashboardData(true)}
+            onClick={handleManualRefresh}
             className="px-3 py-1.5 text-xs font-semibold bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-1.5 shadow-sm"
           >
             <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} />
@@ -365,7 +407,7 @@ export function DashboardTab() {
           </button>
 
           <button
-            onClick={() => fetchDashboardData(true)}
+            onClick={handleManualRefresh}
             disabled={refreshing}
             className="px-4 py-2 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg flex items-center gap-2 border border-slate-200 font-medium transition disabled:opacity-50"
             title="Reload latest data from database"

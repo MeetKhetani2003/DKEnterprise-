@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongoose";
 import Lead from "@/lib/models/Lead";
@@ -5,7 +7,7 @@ import { getUserFromCookie } from "@/lib/auth";
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   try {
-    const user = getUserFromCookie();
+    const user = getUserFromCookie(req);
     if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
@@ -37,7 +39,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
 export async function DELETE(req: Request, { params }: { params: { id: string } }) {
   try {
-    const user = getUserFromCookie();
+    const user = getUserFromCookie(req);
     if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }

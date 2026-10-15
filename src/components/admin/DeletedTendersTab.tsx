@@ -22,14 +22,14 @@ export function DeletedTendersTab({ role }: { role: string }) {
       if (res.ok) {
         const data = await res.json();
         setTenders(Array.isArray(data) ? data : []);
-      } else if (retry < 2) {
-        setTimeout(() => fetchDeletedTenders(retry + 1), 800);
+      } else if (retry < 5) {
+        setTimeout(() => fetchDeletedTenders(retry + 1), 1500);
         return;
       }
     } catch (error) {
       console.error("Failed to fetch deleted tenders", error);
-      if (retry < 2) {
-        setTimeout(() => fetchDeletedTenders(retry + 1), 800);
+      if (retry < 5) {
+        setTimeout(() => fetchDeletedTenders(retry + 1), 1500);
         return;
       }
     } finally {

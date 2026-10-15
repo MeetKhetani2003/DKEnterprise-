@@ -10,7 +10,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = getUserFromCookie();
+    const user = getUserFromCookie(req);
     if (!user || user.role !== 'superadmin') {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }

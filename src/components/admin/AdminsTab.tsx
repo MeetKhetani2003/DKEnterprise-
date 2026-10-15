@@ -29,15 +29,22 @@ export function AdminsTab() {
       });
       if (res.ok) {
         const data = await res.json();
-        setAdmins(Array.isArray(data) ? data : []);
-      } else if (retry < 2) {
-        setTimeout(() => fetchAdmins(retry + 1), 800);
+        if (Array.isArray(data)) {
+          setAdmins(data);
+          if (data.length > 0 || retry >= 5) {
+            setLoading(false);
+            return;
+          }
+        }
+      }
+      if (retry < 5) {
+        setTimeout(() => fetchAdmins(retry + 1), 1500);
         return;
       }
     } catch (error) {
       console.error("Failed to fetch admins", error);
-      if (retry < 2) {
-        setTimeout(() => fetchAdmins(retry + 1), 800);
+      if (retry < 5) {
+        setTimeout(() => fetchAdmins(retry + 1), 1500);
         return;
       }
     } finally {

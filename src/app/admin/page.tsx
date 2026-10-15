@@ -83,7 +83,7 @@ export default function AdminDashboard() {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (retryAttempt = 1) => {
     try {
       const meRes = await fetch("/api/admin/me", {
         cache: "no-store",
@@ -96,35 +96,69 @@ export default function AdminDashboard() {
         setUsername(meData.username);
         setHasEInvoiceAccess(meData.hasEInvoiceAccess || false);
         setHasLeadAccess(meData.hasLeadAccess || false);
+        setLoading(false);
 
-        // Fetch protected data only after confirming authentication
-        const [careersRes, contactsRes] = await Promise.all([
-          fetch("/api/admin/careers", {
-            cache: "no-store",
-            headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
-          }),
-          fetch("/api/admin/contacts", {
-            cache: "no-store",
-            headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
-          }),
-        ]);
-
-        if (careersRes.ok) {
-          const careersData = await careersRes.json();
-          setCareerApplications(careersData);
-        }
-
-        if (contactsRes.ok) {
-          const contactsData = await contactsRes.json();
-          setContactEnquiries(contactsData);
-        }
+        // Fetch counts in resilient loop
+        fetchCounts();
+      } else if (meRes.status === 401) {
+        setIsAuthenticated(false);
+        setLoading(false);
+      } else if (retryAttempt < 4) {
+        setTimeout(() => fetchData(retryAttempt + 1), 1500);
       } else {
         setIsAuthenticated(false);
+        setLoading(false);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
+      if (retryAttempt < 4) {
+        setTimeout(() => fetchData(retryAttempt + 1), 1500);
+      } else {
+        setLoading(false);
+      }
+    }
+  };
+
+  const fetchCounts = async (attempt = 1) => {
+    try {
+      const [careersRes, contactsRes] = await Promise.all([
+        fetch("/api/admin/careers", {
+          cache: "no-store",
+          headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+        }),
+        fetch("/api/admin/contacts", {
+          cache: "no-store",
+          headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+        }),
+      ]);
+
+      let needRetry = false;
+
+      if (careersRes.ok) {
+        const careersData = await careersRes.json();
+        if (Array.isArray(careersData)) {
+          setCareerApplications(careersData);
+        }
+      } else {
+        needRetry = true;
+      }
+
+      if (contactsRes.ok) {
+        const contactsData = await contactsRes.json();
+        if (Array.isArray(contactsData)) {
+          setContactEnquiries(contactsData);
+        }
+      } else {
+        needRetry = true;
+      }
+
+      if (needRetry && attempt < 5) {
+        setTimeout(() => fetchCounts(attempt + 1), 2000);
+      }
+    } catch (e) {
+      if (attempt < 5) {
+        setTimeout(() => fetchCounts(attempt + 1), 2000);
+      }
     }
   };
 

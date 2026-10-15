@@ -7,7 +7,7 @@ import { getUserFromCookie } from "@/lib/auth";
 
 export async function DELETE(req: Request, { params }: { params: { id: string } }) {
   try {
-    const user = getUserFromCookie();
+    const user = getUserFromCookie(req);
     if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }

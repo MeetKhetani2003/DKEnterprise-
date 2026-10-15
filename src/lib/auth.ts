@@ -15,8 +15,21 @@ export const verifyToken = (token: string) => {
   }
 };
 
-export const getUserFromCookie = () => {
-  const token = cookies().get("admin_token")?.value;
+export const getUserFromCookie = (req?: Request) => {
+  let token: string | undefined;
+  try {
+    token = cookies().get("admin_token")?.value;
+  } catch (error) {
+    // cookies() can throw in some edge contexts
+  }
+  if (!token && req) {
+    const cookieHeader = req.headers.get("cookie") || "";
+    const match = cookieHeader.match(/(?:^|;\s*)admin_token=([^;]+)/);
+    if (match) {
+      token = decodeURIComponent(match[1]);
+    }
+  }
   if (!token) return null;
   return verifyToken(token);
 };
+
